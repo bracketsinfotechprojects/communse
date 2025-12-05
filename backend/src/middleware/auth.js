@@ -22,7 +22,14 @@ const auth = async (req, res, next) => {
       return res.status(401).json({ message: 'Account is deactivated' });
     }
 
-    req.user = decoded;
+    // Attach user info to request
+    req.user = {
+      userId: user._id,
+      role: user.role,
+      isVerified: user.isVerified,
+      email: user.email,
+      username: user.username
+    };
     next();
 
   } catch (error) {

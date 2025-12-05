@@ -1,0 +1,241 @@
+const swaggerJsdoc = require('swagger-jsdoc');
+
+const options = {
+  definition: {
+    openapi: '3.0.0',
+    info: {
+      title: 'Community App API',
+      version: '1.0.0',
+      description: 'API documentation for Community App backend',
+    },
+    servers: [
+      {
+        url: 'http://localhost:5000',
+        description: 'Development server',
+      },
+    ],
+    components: {
+      securitySchemes: {
+        bearerAuth: {
+          type: 'http',
+          scheme: 'bearer',
+          bearerFormat: 'JWT',
+        },
+      },
+      schemas: {
+        User: {
+          type: 'object',
+          properties: {
+            id: { type: 'string' },
+            username: { type: 'string' },
+            email: { type: 'string', format: 'email' },
+            firstName: { type: 'string' },
+            lastName: { type: 'string' },
+            fullName: { type: 'string' },
+            avatar: { type: 'string' },
+            bio: { type: 'string' },
+            role: { type: 'string', enum: ['user', 'admin'] },
+            isVerified: { type: 'boolean' },
+            isActive: { type: 'boolean' },
+            followers: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  _id: { type: 'string' },
+                  username: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  avatar: { type: 'string' }
+                }
+              }
+            },
+            following: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  _id: { type: 'string' },
+                  username: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  avatar: { type: 'string' }
+                }
+              }
+            },
+            socialLinks: {
+              type: 'object',
+              properties: {
+                twitter: { type: 'string' },
+                linkedin: { type: 'string' },
+                github: { type: 'string' },
+                website: { type: 'string' }
+              }
+            },
+            lastLogin: { type: 'string', format: 'date-time' },
+            createdAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        Post: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            title: { type: 'string' },
+            content: { type: 'string' },
+            category: { 
+              type: 'string', 
+              enum: ['General', 'Technology', 'Lifestyle', 'Education', 'Entertainment', 'Health', 'Travel', 'Food']
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'string' }
+            },
+            status: { 
+              type: 'string', 
+              enum: ['draft', 'published', 'archived'],
+              default: 'draft'
+            },
+            isPublic: { type: 'boolean', default: true },
+            views: { type: 'integer', default: 0 },
+            likes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  user: { type: 'string' },
+                  createdAt: { type: 'string', format: 'date-time' }
+                }
+              }
+            },
+            author: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                username: { type: 'string' },
+                firstName: { type: 'string' },
+                lastName: { type: 'string' },
+                avatar: { type: 'string' }
+              }
+            },
+            comments: {
+              type: 'array',
+              items: { type: 'string' }
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        Comment: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            content: { type: 'string' },
+            isDeleted: { type: 'boolean', default: false },
+            deletedAt: { type: 'string', format: 'date-time' },
+            likes: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  user: { type: 'string' },
+                  createdAt: { type: 'string', format: 'date-time' }
+                }
+              }
+            },
+            replies: {
+              type: 'array',
+              items: { type: 'string' }
+            },
+            parentComment: { type: 'string' },
+            author: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                username: { type: 'string' },
+                firstName: { type: 'string' },
+                lastName: { type: 'string' },
+                avatar: { type: 'string' }
+              }
+            },
+            post: { type: 'string' },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        Community: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            name: { type: 'string' },
+            description: { type: 'string' },
+            ownerId: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                username: { type: 'string' },
+                firstName: { type: 'string' },
+                lastName: { type: 'string' },
+                avatar: { type: 'string' }
+              }
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'string' }
+            },
+            isPrivate: { type: 'boolean' },
+            location: { type: 'string' },
+            members: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  _id: { type: 'string' },
+                  username: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  avatar: { type: 'string' }
+                }
+              }
+            },
+            bannedMembers: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  _id: { type: 'string' },
+                  username: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  avatar: { type: 'string' }
+                }
+              }
+            },
+            memberCount: { type: 'integer' },
+            settings: {
+              type: 'object',
+              properties: {
+                requireApproval: { type: 'boolean' },
+                allowMemberInvites: { type: 'boolean' },
+                maxMembers: { type: 'integer' }
+              }
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        }
+      }
+    },
+    tags: [
+      { name: 'Auth', description: 'Authentication endpoints' },
+      { name: 'Users', description: 'User management endpoints' },
+      { name: 'Posts', description: 'Post management endpoints' },
+      { name: 'Comments', description: 'Comment management endpoints' },
+      { name: 'Communities', description: 'Community management endpoints' },
+    ],
+  },
+  apis: ['./src/routes/*.js', './src/controllers/*.js'],
+};
+
+const swaggerSpec = swaggerJsdoc(options);
+
+module.exports = swaggerSpec;

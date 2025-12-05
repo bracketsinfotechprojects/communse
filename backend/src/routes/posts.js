@@ -5,9 +5,64 @@ const { auth } = require('../middleware/auth');
 const Post = require('../models/Post');
 const User = require('../models/User');
 
-// @route   GET /api/posts
-// @desc    Get all posts with pagination and filtering
-// @access  Public
+/**
+ * @swagger
+ * /api/posts:
+ *   get:
+ *     summary: Get all posts with pagination and filtering
+ *     tags: [Posts]
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: Number of posts per page
+ *       - in: query
+ *         name: category
+ *         schema:
+ *           type: string
+ *           enum: [General, Technology, Lifestyle, Education, Entertainment, Health, Travel, Food]
+ *         description: Filter by category
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search in post titles and content
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [published, draft, archived]
+ *           default: published
+ *         description: Filter by post status
+ *     responses:
+ *       200:
+ *         description: Posts retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 posts:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Post'
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *                 totalPosts:
+ *                   type: integer
+ *       500:
+ *         description: Server error
+ */
 router.get('/', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -74,9 +129,65 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// @route   POST /api/posts
-// @desc    Create a new post
-// @access  Private
+/**
+ * @swagger
+ * /api/posts:
+ *   post:
+ *     summary: Create a new post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - content
+ *               - category
+ *             properties:
+ *               title:
+ *                 type: string
+ *                 minLength: 1
+ *                 maxLength: 200
+ *               content:
+ *                 type: string
+ *                 minLength: 1
+ *               category:
+ *                 type: string
+ *                 enum: [General, Technology, Lifestyle, Education, Entertainment, Health, Travel, Food]
+ *               tags:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               status:
+ *                 type: string
+ *                 enum: [draft, published, archived]
+ *                 default: draft
+ *               isPublic:
+ *                 type: boolean
+ *                 default: true
+ *     responses:
+ *       201:
+ *         description: Post created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 post:
+ *                   $ref: '#/components/schemas/Post'
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       500:
+ *         description: Server error
+ */
 router.post('/', [
   auth,
   body('title').trim().isLength({ min: 1, max: 200 }).withMessage('Title must be between 1 and 200 characters'),
@@ -192,9 +303,42 @@ router.delete('/:id', auth, async (req, res) => {
   }
 });
 
-// @route   POST /api/posts/:id/like
-// @desc    Like/Unlike a post
-// @access  Private
+/**
+ * @swagger
+ * /api/posts/{id}/like:
+ *   post:
+ *     summary: Like or unlike a post
+ *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Post ID
+ *     responses:
+ *       200:
+ *         description: Like/unlike action completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 likeCount:
+ *                   type: integer
+ *                 isLiked:
+ *                   type: boolean
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Server error
+ */
 router.post('/:id/like', auth, async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);

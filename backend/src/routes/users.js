@@ -4,10 +4,69 @@ const router = express.Router();
 const { auth } = require('../middleware/auth');
 const User = require('../models/User');
 
-// @route   GET /api/users/:id
-// @desc    Get user by ID
-// @access  Public
-router.get('/:id', async (req, res) => {
+/**
+ * @swagger
+ * /api/users/{id}:
+ *   get:
+ *     summary: Get user by ID
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     firstName:
+ *                       type: string
+ *                     lastName:
+ *                       type: string
+ *                     fullName:
+ *                       type: string
+ *                     avatar:
+ *                       type: string
+ *                     bio:
+ *                       type: string
+ *                     followers:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     following:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                     socialLinks:
+ *                       type: object
+ *                     isVerified:
+ *                       type: boolean
+ *                     createdAt:
+ *                       type: string
+ *                       format: date-time
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id', auth, async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
       .populate('followers following', 'username firstName lastName avatar');
@@ -38,9 +97,62 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// @route   PUT /api/users/profile
-// @desc    Update user profile
-// @access  Private
+/**
+ * @swagger
+ * /api/users/profile:
+ *   put:
+ *     summary: Update user profile
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: false
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               firstName:
+ *                 type: string
+ *               lastName:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *                 maxLength: 500
+ *               socialLinks:
+ *                 type: object
+ *                 properties:
+ *                   twitter:
+ *                     type: string
+ *                   linkedin:
+ *                     type: string
+ *                   github:
+ *                     type: string
+ *                   website:
+ *                     type: string
+ *     responses:
+ *       200:
+ *         description: Profile updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 router.put('/profile', [
   auth,
   body('firstName').optional().trim().notEmpty().withMessage('First name cannot be empty'),
@@ -90,9 +202,43 @@ router.put('/profile', [
   }
 });
 
-// @route   POST /api/users/follow/:id
-// @desc    Follow/Unfollow a user
-// @access  Private
+/**
+ * @swagger
+ * /api/users/follow/{id}:
+ *   post:
+ *     summary: Follow or unfollow a user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID to follow/unfollow
+ *     responses:
+ *       200:
+ *         description: Follow/unfollow action completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Followed successfully" # or "Unfollowed successfully"
+ *       400:
+ *         description: Invalid request (following yourself or user not found)
+ *       401:
+ *         description: Unauthorized
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
 router.post('/follow/:id', auth, async (req, res) => {
   try {
     if (req.params.id === req.user.userId) {
@@ -132,10 +278,48 @@ router.post('/follow/:id', auth, async (req, res) => {
   }
 });
 
-// @route   GET /api/users/search
-// @desc    Search users
-// @access  Public
-router.get('/search/:query', async (req, res) => {
+/**
+ * @swagger
+ * /api/users/search/{query}:
+ *   get:
+ *     summary: Search users
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: query
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Search query (username, first name, or last name)
+ *     responses:
+ *       200:
+ *         description: Search results retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 users:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       username:
+ *                         type: string
+ *                       firstName:
+ *                         type: string
+ *                       lastName:
+ *                         type: string
+ *                       avatar:
+ *                         type: string
+ *                       bio:
+ *                         type: string
+ *       500:
+ *         description: Server error
+ */
+router.get('/search/:query', auth, async (req, res) => {
   try {
     const query = req.params.query;
     const users = await User.find({

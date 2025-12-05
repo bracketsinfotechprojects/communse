@@ -5,9 +5,54 @@ const { auth } = require('../middleware/auth');
 const Comment = require('../models/Comment');
 const Post = require('../models/Post');
 
-// @route   GET /api/comments/post/:postId
-// @desc    Get comments for a post
-// @access  Public
+/**
+ * @swagger
+ * /api/comments/post/{postId}:
+ *   get:
+ *     summary: Get comments for a post
+ *     tags: [Comments]
+ *     parameters:
+ *       - in: path
+ *         name: postId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Post ID
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *         description: Page number
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *         description: Number of comments per page
+ *     responses:
+ *       200:
+ *         description: Comments retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 comments:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Comment'
+ *                 totalPages:
+ *                   type: integer
+ *                 currentPage:
+ *                   type: integer
+ *                 totalComments:
+ *                   type: integer
+ *       404:
+ *         description: Post not found
+ *       500:
+ *         description: Server error
+ */
 router.get('/post/:postId', async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
