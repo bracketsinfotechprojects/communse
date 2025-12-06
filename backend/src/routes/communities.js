@@ -21,6 +21,33 @@ const {
   getBannedUsers
 } = require('../controllers/communityController');
 
+const {
+  findNearbyCommunities,
+  findCommunitiesWithinRadius,
+  getUserLocationInfo,
+  searchByInterestAndLocation
+} = require('../controllers/communityNearbyController');
+
+// @route   GET /api/communities/nearby
+// @desc    Find communities near user's current location
+// @access  Private
+router.get('/nearby', auth, findNearbyCommunities);
+
+// @route   GET /api/communities/within-radius
+// @desc    Find communities within a specific radius
+// @access  Private
+router.get('/within-radius', auth, findCommunitiesWithinRadius);
+
+// @route   POST /api/communities/location
+// @desc    Extract city from user coordinates
+// @access  Private
+router.post('/location', auth, getUserLocationInfo);
+
+// @route   GET /api/communities/search-location
+// @desc    Search communities by interest and location
+// @access  Private
+router.get('/search-location', auth, searchByInterestAndLocation);
+
 // @route   GET /api/communities/:id
 // @desc    Get single community by ID
 // @access  Private

@@ -17,7 +17,7 @@ const communitySchema = new mongoose.Schema({
     default: ''
   },
 
-  // Location Information with Coordinates
+  // Location Information (Improved Structure)
   location: {
     city: {
       type: String,
@@ -26,6 +26,18 @@ const communitySchema = new mongoose.Schema({
       minlength: [3, 'City name must be at least 3 characters long'],
       maxlength: [25, 'City name cannot exceed 25 characters'],
       match: [/^[A-Za-z0-9\s]+$/, 'City name can only contain letters, numbers, and spaces']
+    },
+    fullAddress: {
+      type: String,
+      trim: true,
+      maxlength: [200, 'Full address cannot exceed 200 characters'],
+      default: ''
+    },
+    venueDetails: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Venue details cannot exceed 100 characters'],
+      default: ''
     },
     coordinates: {
       latitude: {
@@ -131,7 +143,11 @@ communitySchema.virtual('isAtMaxCapacity').get(function() {
 
 // Virtual for formatted location display
 communitySchema.virtual('displayLocation').get(function() {
-  return this.location?.city || '';
+  const parts = [];
+  if (this.location?.venueDetails) parts.push(this.location.venueDetails);
+  if (this.location?.fullAddress) parts.push(this.location.fullAddress);
+  if (this.location?.city) parts.push(this.location.city);
+  return parts.join(', ');
 });
 
 // Virtual to check if has coordinates
@@ -165,7 +181,7 @@ communitySchema.index({ tags: 1, createdAt: -1 });
 // This index helps with large member arrays (for sharding strategy)
 communitySchema.index({ _id: 1, 'members': 1 });
 
-// Pre-save middleware to auto-generate name from interest and cityName
+// Pre-save middleware to auto-generate name from interest and city
 communitySchema.pre('save', async function(next) {
   try {
     // Update member count
@@ -248,117 +264,6 @@ communitySchema.methods.removeMember = function(userId) {
   return this.save();
 };
 
-// Method to ban member
-communitySchema.methods.banMember = function(userId) {
-  if (!this.members.includes(userId)) {
-    throw new Error('User is not a member of this community');
-  }
-  
-  this.members.pull(userId);
-  this.bannedMembers.push(userId);
-  this.memberCount = this.members.length;
-  return this.save();
-};
-
-// Method to unban member and automatically restore as member
-communitySchema.methods.unbanMember = function(userId) {
-  if (!this.bannedMembers.includes(userId)) {
-    throw new Error('User is not banned from this community');
-  }
-  
-  // Check if community is at max capacity
-  if (this.isAtMaxCapacity) {
-    throw new Error('Community has reached maximum member capacity');
-  }
-  
-  // Remove from banned list and add back to members
-  this.bannedMembers.pull(userId);
-  this.members.push(userId);
-  this.memberCount = this.members.length;
-  
-  return this.save();
-};
-
-// Method to check if user is member
-communitySchema.methods.isMember = function(userId) {
-  return this.members.includes(userId);
-};
-
-// Method to check if user is banned
-communitySchema.methods.isBanned = function(userId) {
-  return this.bannedMembers.includes(userId);
-};
-
-// Method to check if user has pending request
-communitySchema.methods.hasPendingRequest = function(userId) {
-  return this.pendingMembers.some(pending => pending.userId.toString() === userId.toString());
-};
-
-// Method to add pending member request
-communitySchema.methods.addPendingRequest = function(userId, message = '') {
-  if (this.isMember(userId)) {
-    throw new Error('User is already a member');
-  }
-  if (this.isBanned(userId)) {
-    throw new Error('User is banned from this community');
-  }
-  if (this.hasPendingRequest(userId)) {
-    throw new Error('User already has a pending request');
-  }
-  
-  this.pendingMembers.push({
-    userId: userId,
-    message: message,
-    requestedAt: new Date()
-  });
-  return this.save();
-};
-
-// Method to approve member
-communitySchema.methods.approveMember = function(userId) {
-  const pendingIndex = this.pendingMembers.findIndex(pending => pending.userId.toString() === userId.toString());
-  
-  if (pendingIndex === -1) {
-    throw new Error('No pending request found for this user');
-  }
-  
-  if (this.isMember(userId)) {
-    throw new Error('User is already a member');
-  }
-  
-  if (this.isBanned(userId)) {
-    throw new Error('User is banned from this community');
-  }
-  
-  if (this.isAtMaxCapacity) {
-    throw new Error('Community has reached maximum member capacity');
-  }
-  
-  // Remove from pending and add to members
-  this.pendingMembers.splice(pendingIndex, 1);
-  this.members.push(userId);
-  this.memberCount = this.members.length;
-  
-  return this.save();
-};
-
-// Method to reject member request
-communitySchema.methods.rejectMember = function(userId) {
-  const pendingIndex = this.pendingMembers.findIndex(pending => pending.userId.toString() === userId.toString());
-  
-  if (pendingIndex === -1) {
-    throw new Error('No pending request found for this user');
-  }
-  
-  this.pendingMembers.splice(pendingIndex, 1);
-  return this.save();
-};
-
-// Method to check if user is owner
-communitySchema.methods.isOwner = function(userId) {
-  return this.ownerId.toString() === userId.toString();
-};
-
 // Static method to find communities by location
 communitySchema.statics.findByLocation = function(city, limit = 20) {
   return this.find({ 'location.city': new RegExp(city, 'i') })
@@ -380,26 +285,6 @@ communitySchema.statics.findNearby = function(latitude, longitude, maxDistance =
       }
     }
   }).populate('ownerId', 'username firstName lastName avatar');
-};
-
-// Static method to find public communities
-communitySchema.statics.findPublic = function(limit = 20, skip = 0) {
-  return this.find({ isPrivate: false })
-    .sort({ createdAt: -1 })
-    .limit(limit)
-    .skip(skip)
-    .populate('ownerId', 'username firstName lastName avatar');
-};
-
-// Static method to search communities
-communitySchema.statics.searchCommunities = function(query, limit = 20) {
-  return this.find(
-    { $text: { $search: query } },
-    { score: { $meta: 'textScore' } }
-  )
-  .sort({ score: { $meta: 'textScore' } })
-  .limit(limit)
-  .populate('ownerId', 'username firstName lastName avatar');
 };
 
 module.exports = mongoose.model('Community', communitySchema);

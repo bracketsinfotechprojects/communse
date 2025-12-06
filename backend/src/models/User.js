@@ -108,8 +108,7 @@ const userSchema = new mongoose.Schema({
 });
 
 // Indexes for optimal query performance and scalability
-userSchema.index({ email: 1 }, { unique: true });
-userSchema.index({ username: 1 }, { unique: true });
+// Note: email, username, and mobileNumber indexes are auto-created by unique: true in field definitions
 userSchema.index({ mobileNumber: 1 }, { sparse: true, unique: true });
 userSchema.index({ role: 1 });
 userSchema.index({ isActive: 1 });

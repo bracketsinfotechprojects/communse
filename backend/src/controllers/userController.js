@@ -1,12 +1,5 @@
-const express = require('express');
-const router = express.Router();
-const { auth } = require('../middleware/auth');
-const {
-  getUserById,
-  updateUserProfile,
-  followUser,
-  searchUsers
-} = require('../controllers/userController');
+const { body, validationResult } = require('express-validator');
+const User = require('../models/User');
 
 /**
  * @swagger
@@ -70,7 +63,36 @@ const {
  *       500:
  *         description: Server error
  */
-router.get('/:id', auth, getUserById);
+const getUserById = async (req, res) => {
+  try {
+    const user = await User.findById(req.params.id)
+      .populate('followers following', 'username firstName lastName avatar');
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      user: {
+        id: user._id,
+        username: user.username,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        avatar: user.avatar,
+        bio: user.bio,
+        followers: user.followers,
+        following: user.following,
+        socialLinks: user.socialLinks,
+        isVerified: user.isVerified,
+        createdAt: user.createdAt
+      }
+    });
+  } catch (error) {
+    console.error('Get user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 /**
  * @swagger
@@ -126,7 +148,55 @@ router.get('/:id', auth, getUserById);
  *       500:
  *         description: Server error
  */
-router.put('/profile', updateUserProfile);
+const updateUserProfile = [
+  body('firstName').optional().trim().notEmpty().withMessage('First name cannot be empty'),
+  body('lastName').optional().trim().notEmpty().withMessage('Last name cannot be empty'),
+  body('bio').optional().isLength({ max: 500 }).withMessage('Bio cannot exceed 500 characters'),
+  
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ errors: errors.array() });
+      }
+
+      const { firstName, lastName, bio, socialLinks } = req.body;
+
+      const user = await User.findById(req.user.userId);
+
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Update fields
+      if (firstName) user.firstName = firstName;
+      if (lastName) user.lastName = lastName;
+      if (bio !== undefined) user.bio = bio;
+      if (socialLinks) user.socialLinks = { ...user.socialLinks, ...socialLinks };
+
+      await user.save();
+
+      res.json({
+        message: 'Profile updated successfully',
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: user.fullName,
+          avatar: user.avatar,
+          bio: user.bio,
+          socialLinks: user.socialLinks
+        }
+      });
+
+    } catch (error) {
+      console.error('Update profile error:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  }
+];
 
 /**
  * @swagger
@@ -163,7 +233,44 @@ router.put('/profile', updateUserProfile);
  *       500:
  *         description: Server error
  */
-router.post('/follow/:id', auth, followUser);
+const followUser = async (req, res) => {
+  try {
+    if (req.params.id === req.user.userId) {
+      return res.status(400).json({ message: 'You cannot follow yourself' });
+    }
+
+    const userToFollow = await User.findById(req.params.id);
+    const currentUser = await User.findById(req.user.userId);
+
+    if (!userToFollow) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const isFollowing = currentUser.following.includes(req.params.id);
+
+    if (isFollowing) {
+      // Unfollow
+      currentUser.following.pull(req.params.id);
+      userToFollow.followers.pull(req.user.userId);
+      await currentUser.save();
+      await userToFollow.save();
+
+      res.json({ message: 'Unfollowed successfully' });
+    } else {
+      // Follow
+      currentUser.following.push(req.params.id);
+      userToFollow.followers.push(req.user.userId);
+      await currentUser.save();
+      await userToFollow.save();
+
+      res.json({ message: 'Followed successfully' });
+    }
+
+  } catch (error) {
+    console.error('Follow user error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
 
 /**
  * @swagger
@@ -206,6 +313,30 @@ router.post('/follow/:id', auth, followUser);
  *       500:
  *         description: Server error
  */
-router.get('/search/:query', auth, searchUsers);
+const searchUsers = async (req, res) => {
+  try {
+    const query = req.params.query;
+    const users = await User.find({
+      $or: [
+        { username: { $regex: query, $options: 'i' } },
+        { firstName: { $regex: query, $options: 'i' } },
+        { lastName: { $regex: query, $options: 'i' } }
+      ]
+    })
+    .select('username firstName lastName avatar bio')
+    .limit(20);
 
-module.exports = router;
+    res.json({ users });
+
+  } catch (error) {
+    console.error('Search users error:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+};
+
+module.exports = {
+  getUserById,
+  updateUserProfile,
+  followUser,
+  searchUsers
+};
