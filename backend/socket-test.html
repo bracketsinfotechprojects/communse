@@ -54,7 +54,14 @@
       });
 
       socket.on("receive-message", (msg) => {
-        log("📩 New message: " + JSON.stringify(msg));
+        if (msg.success && msg.data) {
+          const sender = msg.data.senderId;
+          const username = sender.username || `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || 'Unknown';
+          const text = msg.data.text || '';
+          log(`📩 ${username}: ${text}`);
+        } else {
+          log("📩 New message: " + JSON.stringify(msg));
+        }
       });
 
       socket.on("typing-update", (data) => {
