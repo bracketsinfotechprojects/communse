@@ -17,6 +17,8 @@ const userRoutes = require('./routes/users');
 const postRoutes = require('./routes/posts');
 const commentRoutes = require('./routes/comments');
 const communityRoutes = require('./routes/communities');
+const interestRoutes = require('./routes/interests');
+const locationRoutes = require('./routes/locations');
 
 const app = express();
 
@@ -54,6 +56,8 @@ app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
 app.use('/api/communities', communityRoutes);
+app.use('/api/interests', interestRoutes);
+app.use('/api', locationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

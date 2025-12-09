@@ -13,7 +13,6 @@ const userSchema = new mongoose.Schema({
   },
   mobileNumber: {
     type: String,
-    unique: true,
     sparse: true,
     match: [/^\+?[\d\s-()]+$/, 'Please enter a valid mobile number']
   },
@@ -89,6 +88,46 @@ const userSchema = new mongoose.Schema({
     ref: 'Community'
   }],
 
+  // Location Information
+  location: {
+    coordinates: {
+      latitude: {
+        type: Number,
+        min: -90,
+        max: 90
+      },
+      longitude: {
+        type: Number,
+        min: -180,
+        max: 180
+      }
+    },
+    city: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'City name cannot exceed 100 characters']
+    },
+    state: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'State name cannot exceed 100 characters']
+    },
+    country: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Country name cannot exceed 100 characters']
+    },
+    method: {
+      type: String,
+      enum: ['database_match', 'api_geocoding', 'coordinates_only', 'manual'],
+      default: 'manual'
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now
+    }
+  },
+
   // Social Links
   // socialLinks: {
   //   twitter: String,
@@ -130,6 +169,13 @@ userSchema.index({
 
 // For large-scale joined communities (sharding consideration)
 userSchema.index({ joinedCommunities: 1 });
+
+// Location indexes for geospatial queries
+userSchema.index({ 'location.coordinates.latitude': 1, 'location.coordinates.longitude': 1 });
+userSchema.index({ 'location.city': 1 });
+userSchema.index({ 'location.state': 1 });
+userSchema.index({ 'location.country': 1 });
+userSchema.index({ 'location.lastUpdated': -1 });
 
 // Virtual for full name
 userSchema.virtual('fullName').get(function() {

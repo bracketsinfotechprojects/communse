@@ -5,7 +5,9 @@ const {
   getUserById,
   updateUserProfile,
   followUser,
-  searchUsers
+  searchUsers,
+  updateUserInterests,
+  getUserInterests
 } = require('../controllers/userController');
 
 /**
@@ -207,5 +209,63 @@ router.post('/follow/:id', auth, followUser);
  *         description: Server error
  */
 router.get('/search/:query', auth, searchUsers);
+
+/**
+ * @swagger
+ * /api/users/{id}/interests:
+ *   put:
+ *     summary: Update user's interests
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: Interests updated successfully
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       403:
+ *         description: Forbidden - can only update own interests
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.put('/:id/interests', updateUserInterests);
+
+/**
+ * @swagger
+ * /api/users/{id}/interests:
+ *   get:
+ *     summary: Get user's interests
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User interests retrieved successfully
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/:id/interests', getUserInterests);
 
 module.exports = router;

@@ -222,6 +222,99 @@ const options = {
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
+        },
+        Interest: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            name: { 
+              type: 'string',
+              description: 'Interest name (3-25 characters, alphanumeric and spaces only)'
+            },
+            createdBy: {
+              type: 'string',
+              description: 'User ID who created this interest'
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        Location: {
+          type: 'object',
+          properties: {
+            coordinates: {
+              type: 'object',
+              properties: {
+                latitude: { 
+                  type: 'number',
+                  minimum: -90,
+                  maximum: 90
+                },
+                longitude: { 
+                  type: 'number',
+                  minimum: -180,
+                  maximum: 180
+                }
+              }
+            },
+            city: { type: 'string' },
+            state: { type: 'string' },
+            country: { type: 'string' },
+            method: { 
+              type: 'string',
+              description: 'How the location was determined (e.g., "manual", "geolocation")'
+            },
+            lastUpdated: { type: 'string', format: 'date-time' }
+          }
+        },
+        CommunityLocation: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            name: { type: 'string' },
+            description: { type: 'string' },
+            ownerId: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                username: { type: 'string' },
+                firstName: { type: 'string' },
+                lastName: { type: 'string' },
+                avatar: { type: 'string' }
+              }
+            },
+            tags: {
+              type: 'array',
+              items: { type: 'string' }
+            },
+            isPrivate: { type: 'boolean' },
+            location: { type: 'string' },
+            members: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  _id: { type: 'string' },
+                  username: { type: 'string' },
+                  firstName: { type: 'string' },
+                  lastName: { type: 'string' },
+                  avatar: { type: 'string' }
+                }
+              }
+            },
+            memberCount: { type: 'integer' },
+            calculatedDistance: { 
+              type: 'number',
+              description: 'Distance from user location in meters'
+            },
+            matchType: {
+              type: 'string',
+              enum: ['exact_location', 'nearby_location', 'city_exact', 'nearby_city'],
+              description: 'How the community was matched to the search'
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
         }
       }
     },
@@ -231,9 +324,12 @@ const options = {
       { name: 'Posts', description: 'Post management endpoints' },
       { name: 'Comments', description: 'Comment management endpoints' },
       { name: 'Communities', description: 'Community management endpoints' },
+      { name: 'Interests', description: 'Interest management endpoints' },
+      { name: 'Locations', description: 'Location-based endpoints' },
+      { name: 'Community Location', description: 'Location-based community discovery APIs' },
     ],
   },
-  apis: ['./src/routes/*.js', './src/controllers/*.js'],
+  apis: ['./src/routes/*.js', './src/controllers/*.js', './src/controllers/*Controller.js'],
 };
 
 const swaggerSpec = swaggerJsdoc(options);

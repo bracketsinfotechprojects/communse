@@ -1,5 +1,6 @@
 const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
+const Interest = require('../models/Interest');
 
 /**
  * @swagger
@@ -334,9 +335,247 @@ const searchUsers = async (req, res) => {
   }
 };
 
+/**
+ * @swagger
+ * /api/users/{id}/interests:
+ *   put:
+ *     summary: Update user's interests
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               interests:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                 description: Array of interest names
+ *               action:
+ *                 type: string
+ *                 enum: [add, remove, replace]
+ *                 default: replace
+ *                 description: Action to perform on interests
+ *     responses:
+ *       200:
+ *         description: Interests updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 interests:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       403:
+ *         description: Forbidden - can only update own interests
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+const updateUserInterests = [
+  body('interests')
+    .isArray({ min: 1 })
+    .withMessage('Interests must be a non-empty array'),
+  body('interests.*')
+    .trim()
+    .isLength({ min: 3, max: 25 })
+    .matches(/^[A-Za-z0-9\s]+$/)
+    .withMessage('Each interest must be 3-25 characters and contain only letters, numbers, and spaces'),
+  body('action')
+    .optional()
+    .isIn(['add', 'remove', 'replace'])
+    .withMessage('Action must be one of: add, remove, replace'),
+
+  async (req, res) => {
+    try {
+      const errors = validationResult(req);
+      if (!errors.isEmpty()) {
+        return res.status(400).json({ 
+          errors: errors.array()
+        });
+      }
+
+      const { id } = req.params;
+      const { interests, action = 'replace' } = req.body;
+
+      // Check if user is updating their own interests
+      if (req.user.userId !== id) {
+        return res.status(403).json({ message: 'You can only update your own interests' });
+      }
+
+      const user = await User.findById(id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+
+      // Validate and process interests
+      const processedInterests = [];
+      const failedInterests = [];
+
+      for (const interestName of interests) {
+        try {
+          // Normalize interest name (same as Interest model)
+          const normalizedName = interestName.trim().toLowerCase()
+            .replace(/\b\w/g, c => c.toUpperCase());
+
+          // Check if interest exists in Interest collection
+          let interest = await Interest.findOne({ name: normalizedName });
+          
+          // If interest doesn't exist, create it
+          if (!interest) {
+            interest = new Interest({ 
+              name: normalizedName,
+              createdBy: req.user.userId 
+            });
+            await interest.save();
+          }
+
+          processedInterests.push(normalizedName);
+        } catch (error) {
+          failedInterests.push({
+            name: interestName,
+            error: error.message
+          });
+        }
+      }
+
+      // Perform action based on request
+      let currentInterests = user.interests || [];
+      
+      switch (action) {
+        case 'add':
+          // Add new interests that aren't already present
+          const interestsToAdd = processedInterests.filter(
+            interest => !currentInterests.includes(interest)
+          );
+          user.interests = [...currentInterests, ...interestsToAdd];
+          break;
+          
+        case 'remove':
+          // Remove specified interests
+          user.interests = currentInterests.filter(
+            interest => !processedInterests.includes(interest)
+          );
+          break;
+          
+        case 'replace':
+        default:
+          // Replace all interests
+          user.interests = processedInterests;
+          break;
+      }
+
+      await user.save();
+
+      const response = {
+        message: `Interests ${action}ed successfully`,
+        interests: user.interests,
+        summary: {
+          requested: interests.length,
+          processed: processedInterests.length,
+          failed: failedInterests.length,
+          action: action
+        }
+      };
+
+      if (failedInterests.length > 0) {
+        response.failed = failedInterests;
+        return res.status(207).json(response); // 207 Multi-Status
+      }
+
+      res.json(response);
+
+    } catch (error) {
+      console.error('Update interests error:', error);
+      res.status(500).json({ message: 'Error updating interests' });
+    }
+  }
+];
+
+/**
+ * @swagger
+ * /api/users/{id}/interests:
+ *   get:
+ *     summary: Get user's interests
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: User ID
+ *     responses:
+ *       200:
+ *         description: User interests retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 userId:
+ *                   type: string
+ *                 interests:
+ *                   type: array
+ *                   items:
+ *                     type: string
+ *                 count:
+ *                   type: number
+ *       401:
+ *         description: Unauthorized - invalid or missing token
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+const getUserInterests = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await User.findById(id).select('interests');
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      userId: user._id,
+      interests: user.interests || [],
+      count: (user.interests || []).length
+    });
+
+  } catch (error) {
+    console.error('Get user interests error:', error);
+    res.status(500).json({ message: 'Error retrieving user interests' });
+  }
+};
+
 module.exports = {
   getUserById,
   updateUserProfile,
   followUser,
-  searchUsers
+  searchUsers,
+  updateUserInterests,
+  getUserInterests
 };
