@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Socket.IO Chat Tester</title>
+</head>
+<body>
+  <h2>Socket.IO Chat Tester</h2>
+
+  <label>JWT Token:</label><br>
+  <input id="token" style="width: 400px"><br><br>
+
+  <label>Community ID:</label><br>
+  <input id="communityId" style="width: 400px"><br><br>
+
+  <button onclick="connectSocket()">Connect</button>
+
+  <hr>
+
+  <h3>Send Message</h3>
+  <input id="message" style="width: 400px">
+  <button onclick="sendMessage()">Send</button>
+
+  <hr>
+
+  <h3>Logs</h3>
+  <pre id="logs" style="background:#eee; padding:10px; height:300px; overflow:auto;"></pre>
+
+  <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+  <script>
+    let socket;
+
+    function log(msg) {
+      document.getElementById("logs").textContent += msg + "\n";
+    }
+
+    function connectSocket() {
+      const token = document.getElementById("token").value;
+
+      socket = io("http://localhost:5000", {
+        auth: { token }
+      });
+
+      socket.on("connect", () => {
+        log("✅ Connected: " + socket.id);
+
+        const communityId = document.getElementById("communityId").value;
+        socket.emit("join-community", { communityId }, (res) => {
+          log("join-community response: " + JSON.stringify(res));
+        });
+      });
+
+      socket.on("connect_error", (err) => {
+        log("❌ Connection error: " + err.message);
+      });
+
+      socket.on("receive-message", (msg) => {
+        log("📩 New message: " + JSON.stringify(msg));
+      });
+
+      socket.on("typing-update", (data) => {
+        log("✏️ Typing: " + JSON.stringify(data));
+      });
+
+      socket.on("message-read", (data) => {
+        log("✅ Read receipt: " + JSON.stringify(data));
+      });
+    }
+
+    function sendMessage() {
+      const communityId = document.getElementById("communityId").value;
+      const text = document.getElementById("message").value;
+
+      socket.emit("send-message", { communityId, text }, (res) => {
+        log("send-message response: " + JSON.stringify(res));
+      });
+    }
+  </script>
+</body>
+</html>

@@ -315,6 +315,96 @@ const options = {
             createdAt: { type: 'string', format: 'date-time' },
             updatedAt: { type: 'string', format: 'date-time' }
           }
+        },
+        Message: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            communityId: {
+              type: 'string',
+              description: 'ID of the community'
+            },
+            senderId: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                username: { type: 'string' },
+                firstName: { type: 'string' },
+                lastName: { type: 'string' },
+                avatar: { type: 'string' }
+              }
+            },
+            text: { 
+              type: 'string',
+              description: 'Message text content',
+              maxLength: 5000
+            },
+            attachments: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of attachment URLs'
+            },
+            readBy: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of user IDs who have read the message'
+            },
+            edited: { 
+              type: 'boolean',
+              description: 'Whether the message has been edited',
+              default: false
+            },
+            editedAt: { 
+              type: 'string',
+              format: 'date-time',
+              description: 'When the message was last edited'
+            },
+            deleted: { 
+              type: 'boolean',
+              description: 'Whether the message has been soft deleted',
+              default: false
+            },
+            createdAt: { type: 'string', format: 'date-time' },
+            updatedAt: { type: 'string', format: 'date-time' }
+          }
+        },
+        ChatResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            message: { type: 'string' },
+            data: { $ref: '#/components/schemas/Message' }
+          }
+        },
+        ChatListResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'array',
+              items: { $ref: '#/components/schemas/Message' }
+            },
+            pagination: {
+              type: 'object',
+              properties: {
+                limit: { type: 'integer' },
+                hasMore: { type: 'boolean' }
+              }
+            }
+          }
+        },
+        UnreadCountResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                communityId: { type: 'string' },
+                unreadCount: { type: 'integer' }
+              }
+            }
+          }
         }
       }
     },
@@ -324,6 +414,7 @@ const options = {
       { name: 'Posts', description: 'Post management endpoints' },
       { name: 'Comments', description: 'Comment management endpoints' },
       { name: 'Communities', description: 'Community management endpoints' },
+      { name: 'Chat', description: 'Chat and messaging endpoints' },
       { name: 'Interests', description: 'Interest management endpoints' },
       { name: 'Locations', description: 'Location-based endpoints' },
       { name: 'Community Location', description: 'Location-based community discovery APIs' },
