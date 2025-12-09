@@ -5,15 +5,20 @@ const compression = require('compression');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const swaggerUi = require('swagger-ui-express');
 require('dotenv').config();
 
 const connectDB = require('./config/database');
+const swaggerSpec = require('./config/swagger');
 
 // Import routes
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const postRoutes = require('./routes/posts');
 const commentRoutes = require('./routes/comments');
+const communityRoutes = require('./routes/communities');
+const interestRoutes = require('./routes/interests');
+const locationRoutes = require('./routes/locations');
 
 const app = express();
 
@@ -42,11 +47,17 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 // Serve static files
 app.use('/uploads', express.static(path.join(__dirname, '../uploads')));
 
+// Swagger API Documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/comments', commentRoutes);
+app.use('/api/communities', communityRoutes);
+app.use('/api/interests', interestRoutes);
+app.use('/api', locationRoutes);
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

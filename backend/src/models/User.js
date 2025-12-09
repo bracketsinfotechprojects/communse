@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const bcrypt = require('bcryptjs');
 
 const userSchema = new mongoose.Schema({
+  // Core Identification Fields
   username: {
     type: String,
     required: [true, 'Username is required'],
@@ -10,6 +11,16 @@ const userSchema = new mongoose.Schema({
     minlength: [3, 'Username must be at least 3 characters long'],
     maxlength: [30, 'Username cannot exceed 30 characters']
   },
+  mobileNumber: {
+    type: String,
+    sparse: true,
+    match: [/^\+?[\d\s-()]+$/, 'Please enter a valid mobile number']
+  },
+  passwordHash: {
+    type: String,
+    required: [true, 'Password hash is required'],
+    select: false
+  },
   email: {
     type: String,
     required: [true, 'Email is required'],
@@ -17,12 +28,8 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters long'],
-    select: false
-  },
+
+  // Personal Information
   firstName: {
     type: String,
     required: [true, 'First name is required'],
@@ -33,15 +40,17 @@ const userSchema = new mongoose.Schema({
     required: [true, 'Last name is required'],
     trim: true
   },
-  avatar: {
-    type: String,
-    default: ''
-  },
-  bio: {
-    type: String,
-    maxlength: [500, 'Bio cannot exceed 500 characters'],
-    default: ''
-  },
+  // avatar: {
+  //   type: String,
+  //   default: ''
+  // },
+  // bio: {
+  //   type: String,
+  //   maxlength: [500, 'Bio cannot exceed 500 characters'],
+  //   default: ''
+  // },
+
+  // Account Management
   role: {
     type: String,
     enum: ['user', 'admin', 'moderator'],
@@ -55,19 +64,78 @@ const userSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
-  followers: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  following: [{
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
-  }],
-  socialLinks: {
-    twitter: String,
-    linkedin: String,
-    website: String
+  agreedToTOS: {
+    type: Boolean,
+    required: [true, 'User must agree to Terms of Service'],
+    default: false
   },
+
+  // Social Features
+  // followers: [{
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User'
+  // }],
+  // following: [{
+  //   type: mongoose.Schema.Types.ObjectId,
+  //   ref: 'User'
+  // }],
+  interests: [{
+    type: String,
+    trim: true
+  }],
+  joinedCommunities: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Community'
+  }],
+
+  // Location Information
+  location: {
+    coordinates: {
+      latitude: {
+        type: Number,
+        min: -90,
+        max: 90
+      },
+      longitude: {
+        type: Number,
+        min: -180,
+        max: 180
+      }
+    },
+    city: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'City name cannot exceed 100 characters']
+    },
+    state: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'State name cannot exceed 100 characters']
+    },
+    country: {
+      type: String,
+      trim: true,
+      maxlength: [100, 'Country name cannot exceed 100 characters']
+    },
+    method: {
+      type: String,
+      enum: ['database_match', 'api_geocoding', 'coordinates_only', 'manual'],
+      default: 'manual'
+    },
+    lastUpdated: {
+      type: Date,
+      default: Date.now
+    }
+  },
+
+  // Social Links
+  // socialLinks: {
+  //   twitter: String,
+  //   linkedin: String,
+  //   website: String
+  // },
+
+  // Activity Tracking
   lastLogin: {
     type: Date,
     default: Date.now
@@ -78,18 +146,59 @@ const userSchema = new mongoose.Schema({
   toObject: { virtuals: true }
 });
 
+// Indexes for optimal query performance and scalability
+// Note: email, username, and mobileNumber indexes are auto-created by unique: true in field definitions
+userSchema.index({ mobileNumber: 1 }, { sparse: true, unique: true });
+userSchema.index({ role: 1 });
+userSchema.index({ isActive: 1 });
+userSchema.index({ isVerified: 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ lastLogin: -1 });
+
+// Compound indexes for common query patterns
+userSchema.index({ isActive: 1, isVerified: 1, createdAt: -1 });
+userSchema.index({ role: 1, isActive: 1 });
+
+// Text search index for user discovery
+userSchema.index({ 
+  username: 'text', 
+  firstName: 'text', 
+  lastName: 'text',
+  interests: 'text' 
+});
+
+// For large-scale joined communities (sharding consideration)
+userSchema.index({ joinedCommunities: 1 });
+
+// Location indexes for geospatial queries
+userSchema.index({ 'location.coordinates.latitude': 1, 'location.coordinates.longitude': 1 });
+userSchema.index({ 'location.city': 1 });
+userSchema.index({ 'location.state': 1 });
+userSchema.index({ 'location.country': 1 });
+userSchema.index({ 'location.lastUpdated': -1 });
+
 // Virtual for full name
 userSchema.virtual('fullName').get(function() {
   return `${this.firstName} ${this.lastName}`;
 });
 
+// Virtual for community count (more efficient than counting array)
+userSchema.virtual('communityCount').get(function() {
+  return this.joinedCommunities ? this.joinedCommunities.length : 0;
+});
+
+// Virtual to check if user is verified
+userSchema.virtual('isFullyVerified').get(function() {
+  return this.isVerified && this.agreedToTOS;
+});
+
 // Hash password before saving
 userSchema.pre('save', async function(next) {
-  if (!this.isModified('password')) return next();
+  if (!this.isModified('passwordHash')) return next();
   
   try {
     const salt = await bcrypt.genSalt(10);
-    this.password = await bcrypt.hash(this.password, salt);
+    this.passwordHash = await bcrypt.hash(this.passwordHash, salt);
     next();
   } catch (error) {
     next(error);
@@ -98,19 +207,32 @@ userSchema.pre('save', async function(next) {
 
 // Compare password method
 userSchema.methods.comparePassword = async function(candidatePassword) {
-  return await bcrypt.compare(candidatePassword, this.password);
+  if (!candidatePassword || typeof candidatePassword !== 'string') {
+    throw new Error('Password is required and must be a string');
+  }
+  
+  if (!this.passwordHash || typeof this.passwordHash !== 'string') {
+    throw new Error('Password hash not found or invalid for user');
+  }
+  
+  try {
+    return await bcrypt.compare(candidatePassword, this.passwordHash);
+  } catch (error) {
+    console.error('Bcrypt comparison error:', error);
+    throw new Error('Password comparison failed');
+  }
 };
 
 // Update last login
-userSchema.methods.updateLastLogin = function() {
+userSchema.methods.updateLastLogin = async function() {
   this.lastLogin = new Date();
-  return this.save();
+  return await this.save();
 };
 
 // Remove sensitive data when converting to JSON
 userSchema.methods.toJSON = function() {
   const user = this.toObject();
-  delete user.password;
+  delete user.passwordHash;
   return user;
 };
 
