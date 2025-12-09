@@ -64,6 +64,24 @@
         }
       });
 
+      socket.on("load-messages", (msg) => {
+        if (msg.success && msg.data && msg.data.length > 0) {
+          log(`📚 Loading ${msg.data.length} previous messages:`);
+          msg.data.forEach(message => {
+            const sender = message.senderId;
+            const username = sender.username || `${sender.firstName || ''} ${sender.lastName || ''}`.trim() || 'Unknown';
+            const text = message.text || '';
+            const timestamp = new Date(message.createdAt).toLocaleTimeString();
+            log(`   [${timestamp}] ${username}: ${text}`);
+          });
+          log("--- End of previous messages ---");
+        } else if (msg.success) {
+          log("📚 No previous messages found");
+        } else {
+          log("📚 Error loading messages: " + JSON.stringify(msg));
+        }
+      });
+
       socket.on("typing-update", (data) => {
         log("✏️ Typing: " + JSON.stringify(data));
       });

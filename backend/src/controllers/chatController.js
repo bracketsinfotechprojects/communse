@@ -1,4 +1,6 @@
 const Message = require('../models/Message');
+const MessageBatch = require('../models/MessageBatch');
+const ChatService = require('../services/chatService');
 const Community = require('../models/Community');
 const { validationResult } = require('express-validator');
 
@@ -76,23 +78,13 @@ const sendMessage = async (req, res) => {
     const { text, attachments } = req.body;
     const userId = req.user.userId;
 
-    // Check if user is member of community
-    const isMember = await isCommunityMember(communityId, userId);
-    if (!isMember) {
-      return res.status(403).json({ message: 'Not authorized to send messages in this community' });
-    }
+    // Use batched message service for better performance
+    const message = await ChatService.sendMessageBatched(communityId, userId, text, attachments);
 
-    // Create message
-    const message = await Message.create({
-      communityId,
-      senderId: userId,
-      text: text || '',
-      attachments: attachments || [],
-      readBy: [userId] // sender has 'read' by default
-    });
-
-    // Populate sender information for response
-    await message.populate('senderId', 'username firstName lastName avatar');
+    // Manually populate sender information since message might not have populate method
+    const User = require('../models/User');
+    const populatedMessage = await User.findById(message.senderId, 'username firstName lastName avatar');
+    message.senderId = populatedMessage;
 
     return res.status(201).json({
       success: true,
@@ -102,7 +94,7 @@ const sendMessage = async (req, res) => {
 
   } catch (error) {
     console.error('Send message error:', error);
-    return res.status(500).json({ message: 'Server error while sending message' });
+    return res.status(500).json({ message: error.message || 'Server error while sending message' });
   }
 };
 
@@ -152,40 +144,14 @@ const getMessages = async (req, res) => {
     const limit = parseInt(req.query.limit, 10) || 50;
     const before = req.query.before;
 
-    // Check if user is member of community
-    const isMember = await isCommunityMember(communityId, userId);
-    if (!isMember) {
-      return res.status(403).json({ message: 'Not authorized to view messages in this community' });
-    }
+    // Use batched message service for better performance
+    const result = await ChatService.getMessagesBatched(communityId, userId, { limit, before });
 
-    // Build query
-    const query = { communityId };
-    if (before) {
-      query.createdAt = { $lt: new Date(before) };
-    }
-
-    // Get messages with pagination
-    const messages = await Message.find(query)
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .populate('senderId', 'username firstName lastName avatar')
-      .lean();
-
-    // Reverse to show oldest first (newest at bottom)
-    const reversedMessages = messages.reverse();
-
-    return res.json({
-      success: true,
-      data: reversedMessages,
-      pagination: {
-        limit,
-        hasMore: messages.length === limit
-      }
-    });
+    return res.json(result);
 
   } catch (error) {
     console.error('Get messages error:', error);
-    return res.status(500).json({ message: 'Server error while fetching messages' });
+    return res.status(500).json({ message: error.message || 'Server error while fetching messages' });
   }
 };
 
@@ -277,28 +243,14 @@ const getUnreadCount = async (req, res) => {
     const { communityId } = req.params;
     const userId = req.user.userId;
 
-    // Check if user is member of community
-    const isMember = await isCommunityMember(communityId, userId);
-    if (!isMember) {
-      return res.status(403).json({ message: 'Not authorized to view this community' });
-    }
+    // Use batched service for better performance
+    const result = await ChatService.getUnreadCountBatched(communityId, userId);
 
-    const count = await Message.countDocuments({
-      communityId,
-      readBy: { $ne: userId }
-    });
-
-    return res.json({
-      success: true,
-      data: {
-        communityId,
-        unreadCount: count
-      }
-    });
+    return res.json(result);
 
   } catch (error) {
     console.error('Get unread count error:', error);
-    return res.status(500).json({ message: 'Server error while fetching unread count' });
+    return res.status(500).json({ message: error.message || 'Server error while fetching unread count' });
   }
 };
 
@@ -358,32 +310,14 @@ const editMessage = async (req, res) => {
     const { text } = req.body;
     const userId = req.user.userId;
 
-    const message = await Message.findById(messageId);
-    if (!message) {
-      return res.status(404).json({ message: 'Message not found' });
-    }
+    // Use batched service for better performance
+    const result = await ChatService.editMessageBatched(messageId, userId, text);
 
-    // Check if user is the sender
-    if (message.senderId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: 'You can edit only your messages' });
-    }
-
-    // Update message
-    message.text = text;
-    message.edited = true;
-    await message.save();
-
-    await message.populate('senderId', 'username firstName lastName avatar');
-
-    return res.json({
-      success: true,
-      message: 'Message updated successfully',
-      data: message
-    });
+    return res.json(result);
 
   } catch (error) {
     console.error('Edit message error:', error);
-    return res.status(500).json({ message: 'Server error while editing message' });
+    return res.status(500).json({ message: error.message || 'Server error while editing message' });
   }
 };
 
@@ -434,31 +368,14 @@ const deleteMessage = async (req, res) => {
     const { messageId } = req.params;
     const userId = req.user.userId;
 
-    const message = await Message.findById(messageId);
-    if (!message) {
-      return res.status(404).json({ message: 'Message not found' });
-    }
+    // Use batched service for better performance
+    const result = await ChatService.deleteMessageBatched(messageId, userId);
 
-    // Check if user is the sender
-    if (message.senderId.toString() !== userId.toString()) {
-      return res.status(403).json({ message: 'You can delete only your messages' });
-    }
-
-    // Soft delete
-    message.deleted = true;
-    message.text = '';
-    message.attachments = [];
-    await message.save();
-
-    return res.json({
-      success: true,
-      message: 'Message deleted successfully',
-      data: { id: messageId }
-    });
+    return res.json(result);
 
   } catch (error) {
     console.error('Delete message error:', error);
-    return res.status(500).json({ message: 'Server error while deleting message' });
+    return res.status(500).json({ message: error.message || 'Server error while deleting message' });
   }
 };
 
