@@ -2,3 +2,4 @@ node_modules
 *.sh
 *.py
 *.md
+firebase_commapp.json add this is gitignore

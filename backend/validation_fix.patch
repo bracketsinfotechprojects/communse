@@ -1,0 +1,69 @@
+--- a/backend/src/routes/chat.js
++++ b/backend/src/routes/chat.js
+@@ -62,7 +62,10 @@ const addReactionValidation = [
+   body('emoji')
+     .isLength({ min: 1, max: 10 })
+     .withMessage('Emoji must be between 1 and 10 characters')
+     .trim(),
+-  body('roomId')
+-    .isMongoId()
+-    .withMessage('Valid room ID is required')
++  body('roomId')
++    .isString()
++    .isLength({ min: 1 })
++    .withMessage('Valid room ID is required')
++    .matches(/^room_\d+_[a-zA-Z0-9]+$/)
++    .withMessage('Invalid room ID format')
+ ];
+ 
+@@ -67,7 +70,10 @@ const markAsReadValidation = [
+-  body('roomId')
+-    .isMongoId()
+-    .withMessage('Valid room ID is required')
++  body('roomId')
++    .isString()
++    .isLength({ min: 1 })
++    .withMessage('Valid room ID is required')
++    .matches(/^room_\d+_[a-zA-Z0-9]+$/)
++    .withMessage('Invalid room ID format')
+ ];
+ 
+@@ -83,7 +89,10 @@ const editMessageValidation = [
+   body('content')
+     .isLength({ min: 1, max: 2000 })
+     .withMessage('Message content must be between 1 and 2000 characters')
+     .trim(),
+-  body('roomId')
+-    .isMongoId()
+-    .withMessage('Valid room ID is required')
++  body('roomId')
++    .isString()
++    .isLength({ min: 1 })
++    .withMessage('Valid room ID is required')
++    .matches(/^room_\d+_[a-zA-Z0-9]+$/)
++    .withMessage('Invalid room ID format')
+ ];
+ 
+@@ -89,7 +96,10 @@ const deleteMessageValidation = [
+-  body('roomId')
+-    .isMongoId()
+-    .withMessage('Valid room ID is required')
++  body('roomId')
++    .isString()
++    .isLength({ min: 1 })
++    .withMessage('Valid room ID is required')
++    .matches(/^room_\d+_[a-zA-Z0-9]+$/)
++    .withMessage('Invalid room ID format')
+ ];
+ 
+@@ -95,7 +105,10 @@ const roomIdValidation = [
+-  param('roomId')
+-    .isMongoId()
+-    .withMessage('Valid room ID is required')
++  param('roomId')
++    .isString()
++    .isLength({ min: 1 })
++    .withMessage('Valid room ID is required')
++    .matches(/^room_\d+_[a-zA-Z0-9]+$/)
++    .withMessage('Invalid room ID format')
+ ];

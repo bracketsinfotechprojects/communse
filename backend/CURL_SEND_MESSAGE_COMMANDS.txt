@@ -1,0 +1,349 @@
+# CURL COMMANDS FOR SENDING MESSAGES - CommAPP API
+
+## Prerequisites
+1. First, get an authentication token by logging in:
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "your-email@example.com", "password": "your-password"}'
+```
+
+2. Extract the token from the response and use it in the message requests.
+
+---
+
+## 1. SEND MESSAGE IN GENERAL CHAT ROOM
+
+### Basic Text Message:
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Hello everyone! How is everyone doing today?",
+    "messageType": "text"
+  }'
+```
+
+### Message with Reply:
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "I agree with that point!",
+    "messageType": "text",
+    "replyTo": "MESSAGE_ID_TO_REPLY_TO"
+  }'
+```
+
+### Image Message:
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Check out this amazing view!",
+    "messageType": "image"
+  }'
+```
+
+### File Message:
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Here is the document we discussed",
+    "messageType": "file"
+  }'
+```
+
+### Audio Message:
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Voice message about the project update",
+    "messageType": "audio"
+  }'
+```
+
+### Video Message:
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Demo video of the new feature",
+    "messageType": "video"
+  }'
+```
+
+---
+
+## 2. SEND MESSAGE IN EVENT CHAT
+
+### Basic Event Chat Message:
+```bash
+curl -X POST http://localhost:5000/api/events/EVENT_ID_HERE/chat/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Looking forward to this event! See you all there.",
+    "messageType": "text"
+  }'
+```
+
+### Event Chat with Reply:
+```bash
+curl -X POST http://localhost:5000/api/events/EVENT_ID_HERE/chat/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Yes, I have the same question!",
+    "messageType": "text",
+    "replyTo": "MESSAGE_ID_TO_REPLY_TO"
+  }'
+```
+
+### Event Chat Image:
+```bash
+curl -X POST http://localhost:5000/api/events/EVENT_ID_HERE/chat/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Here is a photo from the venue",
+    "messageType": "image"
+  }'
+```
+
+---
+
+## 3. MESSAGE REACTIONS
+
+### Add Reaction to Message:
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/MESSAGE_ID_HERE/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "emoji": "👍",
+    "roomId": "CHAT_ROOM_ID_HERE"
+  }'
+```
+
+### Add Different Reactions:
+```bash
+# Heart reaction
+curl -X POST http://localhost:5000/api/chat/messages/MESSAGE_ID_HERE/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "emoji": "❤️",
+    "roomId": "CHAT_ROOM_ID_HERE"
+  }'
+
+# Laughing reaction
+curl -X POST http://localhost:5000/api/chat/messages/MESSAGE_ID_HERE/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "emoji": "😂",
+    "roomId": "CHAT_ROOM_ID_HERE"
+  }'
+```
+
+---
+
+## 4. MESSAGE MANAGEMENT
+
+### Edit Your Own Message:
+```bash
+curl -X PUT http://localhost:5000/api/chat/messages/MESSAGE_ID_HERE \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Updated message content here",
+    "roomId": "CHAT_ROOM_ID_HERE"
+  }'
+```
+
+### Delete Your Own Message:
+```bash
+curl -X DELETE http://localhost:5000/api/chat/messages/MESSAGE_ID_HERE \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "roomId": "CHAT_ROOM_ID_HERE"
+  }'
+```
+
+### Mark Message as Read:
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/MESSAGE_ID_HERE/read \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "roomId": "CHAT_ROOM_ID_HERE"
+  }'
+```
+
+---
+
+## 5. HELPFUL UTILITY COMMANDS
+
+### Get Your Chat Rooms:
+```bash
+curl -X GET http://localhost:5000/api/chat/rooms/user \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Event Chat Rooms:
+```bash
+curl -X GET http://localhost:5000/api/chat/users/events \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Messages from Chat Room:
+```bash
+curl -X GET "http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages?limit=50&offset=0" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Messages from Event Chat:
+```bash
+curl -X GET "http://localhost:5000/api/events/EVENT_ID_HERE/chat/messages?limit=50&offset=0" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Event Chat Room Info:
+```bash
+curl -X GET http://localhost:5000/api/events/EVENT_ID_HERE/chat/room \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+---
+
+## 6. COMPLETE WORKFLOW EXAMPLE
+
+### Step 1: Login and Get Token
+```bash
+LOGIN_RESPONSE=$(curl -s -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}')
+
+TOKEN=$(echo $LOGIN_RESPONSE | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+echo "Token: $TOKEN"
+```
+
+### Step 2: Get Your Chat Rooms
+```bash
+curl -X GET http://localhost:5000/api/chat/rooms/user \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### Step 3: Send a Message
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/ROOM_ID_HERE/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Hello from the workflow example!",
+    "messageType": "text"
+  }'
+```
+
+### Step 4: Get Updated Messages
+```bash
+curl -X GET "http://localhost:5000/api/chat/rooms/ROOM_ID_HERE/messages?limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## 7. MESSAGE TYPES EXPLAINED
+
+- **text**: Regular text messages (default)
+- **image**: Image attachments
+- **file**: Document/file attachments  
+- **audio**: Voice messages or audio files
+- **video**: Video attachments or video messages
+
+---
+
+## 8. IMPORTANT NOTES
+
+1. **Replace Placeholders:**
+   - `YOUR_JWT_TOKEN_HERE` with actual token from login response
+   - `CHAT_ROOM_ID_HERE` with actual chat room ID
+   - `EVENT_ID_HERE` with actual event ID
+   - `MESSAGE_ID_HERE` with actual message ID
+
+2. **Authentication:** All message endpoints require valid JWT token
+
+3. **Permissions:** 
+   - Event chat: Only event attendees can send messages
+   - General chat: Only room participants can send messages
+   - Edit/Delete: Only the message sender can modify their messages
+
+4. **Message Length:** Maximum 2000 characters for message content
+
+5. **Response Format:** All successful responses return:
+   ```json
+   {
+     "success": true,
+     "data": { /* message data */ },
+     "message": "Message sent successfully"
+   }
+   ```
+
+6. **Error Handling:** Check response status codes:
+   - 200/201: Success
+   - 400: Bad request/validation error
+   - 401: Unauthorized (invalid token)
+   - 403: Forbidden (no permission)
+   - 404: Not found (invalid IDs)
+
+---
+
+## 9. QUICK TEST COMMANDS
+
+### Test Basic Message Sending:
+```bash
+# Replace with your actual values
+curl -X POST http://localhost:5000/api/chat/rooms/ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"content": "Test message", "messageType": "text"}'
+```
+
+### Test Event Message Sending:
+```bash
+# Replace with your actual values  
+curl -X POST http://localhost:5000/api/events/EVENT_ID/chat/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"content": "Test event message", "messageType": "text"}'
+```
+
+---
+
+## 10. TROUBLESHOOTING
+
+### Common Issues:
+
+1. **401 Unauthorized:** Check if your JWT token is valid and not expired
+2. **403 Forbidden:** Ensure you have permission to send messages in that chat room
+3. **404 Not Found:** Verify the chat room ID or event ID exists
+4. **400 Bad Request:** Check message content length (max 2000 chars) and required fields
+
+### Debug Commands:
+```bash
+# Test if backend is running
+curl -X GET http://localhost:5000/api/auth/test-login
+
+# Test token validity
+curl -X GET http://localhost:5000/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN"
