@@ -9,15 +9,26 @@ class FirebaseConfig {
   initializeApp() {
     try {
       if (!admin.apps.length) {
-        admin.initializeApp({
-          credential: admin.credential.cert(serviceAccount),
-          databaseURL: process.env.FIREBASE_DATABASE_URL
-        });
-
-        console.log('Firebase initialized successfully');
+        // Initialize with only Auth (no Database) to avoid missing DATABASE_URL error
+        const config = {
+          credential: admin.credential.cert(serviceAccount)
+        };
         
-        // Initialize Realtime Database reference
-        this.db = admin.database();
+        // Only add database URL if it exists (for backwards compatibility)
+        if (process.env.FIREBASE_DATABASE_URL) {
+          config.databaseURL = process.env.FIREBASE_DATABASE_URL;
+        }
+        
+        admin.initializeApp(config);
+
+        // Only initialize Database if URL is provided
+        if (process.env.FIREBASE_DATABASE_URL) {
+          this.db = admin.database();
+          console.log('Firebase initialized with Database');
+        } else {
+          console.log('Firebase initialized without Database (Auth only)');
+        }
+        
         this.auth = admin.auth();
         this.messaging = admin.messaging();
       }
@@ -27,8 +38,12 @@ class FirebaseConfig {
     }
   }
 
-  // Get Firebase Database reference
+  // Get Firebase Database reference (only if initialized)
   getDatabase() {
+    if (!this.db) {
+      console.warn('Firebase Database not initialized. Set FIREBASE_DATABASE_URL to enable.');
+      return null;
+    }
     return this.db;
   }
 

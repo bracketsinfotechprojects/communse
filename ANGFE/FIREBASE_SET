@@ -1,0 +1,57 @@
+# Firebase Configuration Setup Guide
+
+## Current Issue
+The Firebase project `tempcomm-35dff` is returning "CONFIGURATION_NOT_FOUND" error, which means:
+1. The project doesn't exist or isn't accessible
+2. Firebase Authentication isn't enabled
+3. The API configuration is incorrect
+
+## Solution Options
+
+### Option 1: Provide Your Firebase Configuration
+When you provide your Firebase token/configuration, I'll update the Angular environment with your Firebase project details:
+
+```typescript
+export const environment = {
+  production: false,
+  firebase: {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_PROJECT.firebaseapp.com",
+    databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_PROJECT.appspot.com",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+  }
+};
+```
+
+### Option 2: Use Firebase Emulator (For Testing)
+I can set up Firebase emulators for local development:
+
+```typescript
+export const environment = {
+  production: false,
+  firebase: {
+    apiKey: "fake-api-key",
+    authDomain: "localhost",
+    databaseURL: "http://localhost:9000?ns=YOUR_PROJECT_ID",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "localhost",
+    messagingSenderId: "0",
+    appId: "1:0:web:fake-app-id"
+  }
+};
+```
+
+### Option 3: Mock Firebase for Demo
+Create a mock implementation for demonstration purposes.
+
+## Required Firebase Services
+Make sure your Firebase project has:
+1. ✅ **Authentication** - Enabled and configured
+2. ✅ **Realtime Database** - Enabled for chat functionality
+3. ✅ **Firestore** - Optional, for additional features
+
+## Next Steps
+Please provide your Firebase project configuration details, and I'll update the Angular app accordingly.

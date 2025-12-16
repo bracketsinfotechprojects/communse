@@ -1,0 +1,166 @@
+===============================================
+CORRECTED CLIENT CURL COMMANDS FOR YOUR SETUP
+===============================================
+
+Your server is running on port 5000 with the chat token routes now integrated.
+
+Replace USER_ID and EVENT_ID with actual MongoDB ObjectIds:
+- USER_ID: 6937ca8a627f152384ac1884 (your actual user ID)
+- EVENT_ID: 693bb754eb012d2a43551197 (your actual event ID)
+
+===============================================
+CORRECTED COMMANDS FOR PORT 5000
+===============================================
+
+1. GENERATE CHAT TOKEN (GET):
+curl -X GET "http://localhost:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json"
+
+2. GENERATE CHAT TOKEN (POST):
+curl -X POST "http://localhost:5000/chat/token" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"userId":"6937ca8a627f152384ac1884","eventId":"693bb754eb012d2a43551197"}'
+
+3. VERIFY TOKEN:
+curl -X GET "http://localhost:5000/chat/verify?token=TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json"
+
+4. CHECK PERMISSION:
+curl -X POST "http://localhost:5000/chat/permission" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"userId":"6937ca8a627f152384ac1884","eventId":"693bb754eb012d2a43551197"}'
+
+===============================================
+AUTHENTICATION EXAMPLES
+===============================================
+
+WITH JWT TOKEN:
+curl -X GET "http://localhost:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+
+WITH API KEY:
+curl -X GET "http://localhost:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -H "X-API-Key: YOUR_API_KEY_HERE"
+
+===============================================
+PRODUCTION URLS (Update port/domain as needed)
+===============================================
+
+LOCAL DEVELOPMENT:
+curl -X GET "http://localhost:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197"
+
+STAGING:
+curl -X GET "https://api-staging.yourapp.com:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197"
+
+PRODUCTION:
+curl -X GET "https://api.yourapp.com:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197"
+
+===============================================
+QUICK TEST COMMANDS
+===============================================
+
+Test 1 - Valid request with your IDs:
+curl -X GET "http://localhost:5000/chat/token?userId=6937ca8a627f152384ac1884&eventId=693bb754eb012d2a43551197" \
+  -H "Content-Type: application/json"
+
+Test 2 - Check if server is running:
+curl -X GET "http://localhost:5000/api/health" \
+  -H "Content-Type: application/json"
+
+Test 3 - Test invalid user format:
+curl -X GET "http://localhost:5000/chat/token?userId=invalid-user-id&eventId=693bb754eb012d2a43551197" \
+  -H "Content-Type: application/json"
+
+Test 4 - Test missing parameters:
+curl -X GET "http://localhost:5000/chat/token?eventId=693bb754eb012d2a43551197" \
+  -H "Content-Type: application/json"
+
+===============================================
+SUCCESS RESPONSE FORMAT
+===============================================
+
+{
+  "success": true,
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "claims": {
+    "eventId": "693bb754eb012d2a43551197",
+    "role": "member",
+    "userId": "6937ca8a627f152384ac1884",
+    "communityId": "COMMUNITY_ID"
+  }
+}
+
+===============================================
+TROUBLESHOOTING
+===============================================
+
+If you still get "Route not found":
+1. Make sure your server is running on port 5000
+2. Restart your server after adding the new routes
+3. Check the server logs for the "✅ Chat token routes mounted at /chat" message
+
+If you get Firebase errors:
+1. Check your Firebase configuration in backend/src/config/firebase.js
+2. Ensure the service account JSON file exists
+3. Verify environment variables if using env var method
+
+===============================================
+CLIENT-SIDE JAVASCRIPT EXAMPLE
+===============================================
+
+async function getChatToken(userId, eventId) {
+  try {
+    const response = await fetch(
+      `http://localhost:5000/chat/token?userId=${userId}&eventId=${eventId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('Token received:', data.token);
+      console.log('User role:', data.claims.role);
+      
+      // Use token with Firebase Client SDK
+      const { signInWithCustomToken } = await import('firebase/auth');
+      const { auth } = await import('./firebase-config');
+      
+      const userCredential = await signInWithCustomToken(auth, data.token);
+      console.log('User signed in for chat:', userCredential.user.uid);
+      
+      return data.token;
+    } else {
+      throw new Error(data.error);
+    }
+  } catch (error) {
+    console.error('Chat token error:', error);
+    throw error;
+  }
+}
+
+// Usage with your actual IDs:
+// const token = await getChatToken('6937ca8a627f152384ac1884', '693bb754eb012d2a43551197');
+
+===============================================
+IMPORTANT NOTES
+===============================================
+
+1. ✅ Routes are now integrated into your server.js
+2. ✅ Use port 5000 (not 3000)
+3. ✅ URL path is /chat/token (not /api/chat/token)
+4. 🔄 Restart your server to load the new routes
+5. 📋 Check server logs for "Chat token routes mounted" message

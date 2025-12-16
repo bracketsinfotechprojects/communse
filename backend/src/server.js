@@ -21,6 +21,8 @@ const interestRoutes = require('./routes/interests');
 const eventRoutes = require('./routes/events');
 const locationRoutes = require('./routes/locations');
 const chatRoutes = require('./routes/chat');
+const chatTokenRoutes = require('./routes/chatToken');
+const firebaseConfigRoutes = require('./routes/firebaseConfig');
 
 const app = express();
 
@@ -40,8 +42,19 @@ app.use(compression());
 app.use(morgan('combined'));
 app.use(limiter);
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
+  origin: [
+    process.env.FRONTEND_URL || 'http://localhost:3000',
+    'http://localhost:3001', // Development server
+    'http://localhost:4200',
+    'http://localhost:4201',
+    'http://127.0.0.1:4200',
+    'http://127.0.0.1:4201',
+    'null', // Allow file:// protocol for local testing
+    /^file:\/\//, // Allow any file:// URL for local testing
+  ],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -62,6 +75,11 @@ app.use('/api/interests', interestRoutes);
 app.use('/api/events', eventRoutes);
 app.use('/api', locationRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/chat', chatTokenRoutes); // Chat token routes
+app.use('/firebase', firebaseConfigRoutes); // Firebase config endpoint
+
+console.log('✅ Chat token routes mounted at /chat');
+console.log('✅ Firebase config endpoint mounted at /firebase');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

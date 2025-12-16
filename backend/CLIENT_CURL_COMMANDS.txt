@@ -1,0 +1,177 @@
+===============================================
+CLIENT CURL COMMANDS FOR CHAT TOKEN ACCESS
+===============================================
+
+Replace USER_ID and EVENT_ID with actual MongoDB ObjectIds:
+- USER_ID: 64a7b8c9d1e2f3456789abcd (replace with actual user ID)
+- EVENT_ID: 64a7b8c9d1e2f3456789ef01 (replace with actual event ID)
+
+===============================================
+BASIC COMMANDS
+===============================================
+
+1. GENERATE CHAT TOKEN (GET):
+curl -X GET "http://localhost:3000/chat/token?userId=USER_ID&eventId=EVENT_ID" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json"
+
+2. GENERATE CHAT TOKEN (POST):
+curl -X POST "http://localhost:3000/chat/token" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"userId":"USER_ID","eventId":"EVENT_ID"}'
+
+3. VERIFY TOKEN:
+curl -X GET "http://localhost:3000/chat/verify?token=TOKEN_HERE" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json"
+
+4. CHECK PERMISSION:
+curl -X POST "http://localhost:3000/chat/permission" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -d '{"userId":"USER_ID","eventId":"EVENT_ID"}'
+
+===============================================
+AUTHENTICATION EXAMPLES
+===============================================
+
+WITH JWT TOKEN:
+curl -X GET "http://localhost:3000/chat/token?userId=USER_ID&eventId=EVENT_ID" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+
+WITH API KEY:
+curl -X GET "http://localhost:3000/chat/token?userId=USER_ID&eventId=EVENT_ID" \
+  -H "Content-Type: application/json" \
+  -H "Accept: application/json" \
+  -H "X-API-Key: YOUR_API_KEY_HERE"
+
+===============================================
+PRODUCTION URLS
+===============================================
+
+DEVELOPMENT:
+curl -X GET "http://localhost:3000/chat/token?userId=USER_ID&eventId=EVENT_ID"
+
+STAGING:
+curl -X GET "https://api-staging.yourapp.com/chat/token?userId=USER_ID&eventId=EVENT_ID"
+
+PRODUCTION:
+curl -X GET "https://api.yourapp.com/chat/token?userId=USER_ID&eventId=EVENT_ID"
+
+===============================================
+SUCCESS RESPONSE FORMAT
+===============================================
+
+{
+  "success": true,
+  "token": "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "claims": {
+    "eventId": "EVENT_ID",
+    "role": "member",
+    "userId": "USER_ID",
+    "communityId": "COMMUNITY_ID"
+  }
+}
+
+===============================================
+ERROR RESPONSES
+===============================================
+
+USER NOT MEMBER (403):
+{
+  "success": false,
+  "error": "User is not a member of this event"
+}
+
+INVALID FORMAT (400):
+{
+  "success": false,
+  "error": "Invalid userId format"
+}
+
+MISSING PARAMETERS (400):
+{
+  "success": false,
+  "error": "userId and eventId are required parameters"
+}
+
+NOT FOUND (404):
+{
+  "success": false,
+  "error": "Event not found"
+}
+
+===============================================
+CLIENT-SIDE JAVASCRIPT EXAMPLE
+===============================================
+
+async function getChatToken(userId, eventId) {
+  try {
+    const response = await fetch(
+      `http://localhost:3000/chat/token?userId=${userId}&eventId=${eventId}`,
+      {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        }
+      }
+    );
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      // Use token with Firebase Client SDK
+      const { signInWithCustomToken } = await import('firebase/auth');
+      const { auth } = await import('./firebase-config');
+      
+      const userCredential = await signInWithCustomToken(auth, data.token);
+      console.log('User signed in for chat:', userCredential.user.uid);
+      
+      return data.token;
+    } else {
+      throw new Error(data.error);
+    }
+  } catch (error) {
+    console.error('Chat token error:', error);
+    throw error;
+  }
+}
+
+// Usage:
+// const token = await getChatToken('USER_ID', 'EVENT_ID');
+
+===============================================
+QUICK TEST COMMANDS
+===============================================
+
+Replace USER_ID and EVENT_ID with actual values, then run:
+
+1. Test valid request:
+curl -X GET "http://localhost:3000/chat/token?userId=USER_ID&eventId=EVENT_ID" \
+  -H "Content-Type: application/json"
+
+2. Test invalid user:
+curl -X GET "http://localhost:3000/chat/token?userId=invalid-user-id&eventId=EVENT_ID" \
+  -H "Content-Type: application/json"
+
+3. Test invalid event:
+curl -X GET "http://localhost:3000/chat/token?userId=USER_ID&eventId=invalid-event-id" \
+  -H "Content-Type: application/json"
+
+4. Test missing parameters:
+curl -X GET "http://localhost:3000/chat/token?eventId=EVENT_ID" \
+  -H "Content-Type: application/json"
+
+===============================================
+NOTES
+===============================================
+
+- Replace all placeholder IDs with actual MongoDB ObjectIds
+- Update localhost URL to match your environment
+- Add authentication headers as required by your API
+- Token expires after 1 hour (Firebase default)
+- Use the claims in Firebase security rules for authorization
