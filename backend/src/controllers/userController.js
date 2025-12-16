@@ -38,20 +38,11 @@ const Interest = require('../models/Interest');
  *                       type: string
  *                     fullName:
  *                       type: string
- *                     avatar:
- *                       type: string
- *                     bio:
- *                       type: string
- *                     followers:
- *                       type: array
- *                       items:
- *                         type: object
- *                     following:
- *                       type: array
- *                       items:
- *                         type: object
- *                     socialLinks:
- *                       type: object
+ *                     // avatar: // Field commented out in User model
+ *                     // bio: // Field commented out in User model
+ *                     // followers: // Field commented out in User model
+ *                     // following: // Field commented out in User model
+ *                     // socialLinks: // Field commented out in User model
  *                     isVerified:
  *                       type: boolean
  *                     createdAt:
@@ -66,8 +57,8 @@ const Interest = require('../models/Interest');
  */
 const getUserById = async (req, res) => {
   try {
-    const user = await User.findById(req.params.id)
-      .populate('followers following', 'username firstName lastName avatar');
+    // FIX: Remove populate for non-existent fields (followers/following are commented out in User model)
+    const user = await User.findById(req.params.id);
     
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -80,13 +71,14 @@ const getUserById = async (req, res) => {
         firstName: user.firstName,
         lastName: user.lastName,
         fullName: user.fullName,
-        avatar: user.avatar,
-        bio: user.bio,
-        followers: user.followers,
-        following: user.following,
-        socialLinks: user.socialLinks,
+        // Removed commented-out fields: avatar, bio, followers, following, socialLinks
         isVerified: user.isVerified,
-        createdAt: user.createdAt
+        createdAt: user.createdAt,
+        // Include available fields
+        interests: user.interests || [],
+        joinedCommunities: user.joinedCommunities || [],
+        location: user.location || {},
+        lastLogin: user.lastLogin
       }
     });
   } catch (error) {
@@ -114,11 +106,8 @@ const getUserById = async (req, res) => {
  *                 type: string
  *               lastName:
  *                 type: string
- *               bio:
- *                 type: string
- *                 maxLength: 500
- *               socialLinks:
- *                 type: object
+ *               // bio: // Field commented out in User model
+ *               // socialLinks: // Field commented out in User model
  *                 properties:
  *                   twitter:
  *                     type: string
@@ -152,7 +141,7 @@ const getUserById = async (req, res) => {
 const updateUserProfile = [
   body('firstName').optional().trim().notEmpty().withMessage('First name cannot be empty'),
   body('lastName').optional().trim().notEmpty().withMessage('Last name cannot be empty'),
-  body('bio').optional().isLength({ max: 500 }).withMessage('Bio cannot exceed 500 characters'),
+  // Removed bio validation - field is commented out in User model
   
   async (req, res) => {
     try {
@@ -161,7 +150,7 @@ const updateUserProfile = [
         return res.status(400).json({ errors: errors.array() });
       }
 
-      const { firstName, lastName, bio, socialLinks } = req.body;
+      const { firstName, lastName /*, bio, socialLinks - commented out fields */ } = req.body;
 
       const user = await User.findById(req.user.userId);
 
@@ -169,12 +158,10 @@ const updateUserProfile = [
         return res.status(404).json({ message: 'User not found' });
       }
 
-      // Update fields
+      // Update fields (only if fields exist in model)
       if (firstName) user.firstName = firstName;
       if (lastName) user.lastName = lastName;
-      if (bio !== undefined) user.bio = bio;
-      if (socialLinks) user.socialLinks = { ...user.socialLinks, ...socialLinks };
-
+      // Removed bio and socialLinks updates - fields are commented out in User model
       await user.save();
 
       res.json({
@@ -186,9 +173,13 @@ const updateUserProfile = [
           firstName: user.firstName,
           lastName: user.lastName,
           fullName: user.fullName,
-          avatar: user.avatar,
-          bio: user.bio,
-          socialLinks: user.socialLinks
+          // Removed avatar, bio, socialLinks - fields are commented out in User model
+          isVerified: user.isVerified,
+          createdAt: user.createdAt,
+          interests: user.interests || [],
+          joinedCommunities: user.joinedCommunities || [],
+          location: user.location || {},
+          lastLogin: user.lastLogin
         }
       });
 
@@ -240,32 +231,10 @@ const followUser = async (req, res) => {
       return res.status(400).json({ message: 'You cannot follow yourself' });
     }
 
-    const userToFollow = await User.findById(req.params.id);
-    const currentUser = await User.findById(req.user.userId);
-
-    if (!userToFollow) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    const isFollowing = currentUser.following.includes(req.params.id);
-
-    if (isFollowing) {
-      // Unfollow
-      currentUser.following.pull(req.params.id);
-      userToFollow.followers.pull(req.user.userId);
-      await currentUser.save();
-      await userToFollow.save();
-
-      res.json({ message: 'Unfollowed successfully' });
-    } else {
-      // Follow
-      currentUser.following.push(req.params.id);
-      userToFollow.followers.push(req.user.userId);
-      await currentUser.save();
-      await userToFollow.save();
-
-      res.json({ message: 'Followed successfully' });
-    }
+    // Note: This function would need followers/following fields to be uncommented in User model
+    return res.status(501).json({ 
+      message: 'Follow functionality temporarily disabled - followers/following fields not implemented' 
+    });
 
   } catch (error) {
     console.error('Follow user error:', error);
@@ -307,10 +276,8 @@ const followUser = async (req, res) => {
  *                         type: string
  *                       lastName:
  *                         type: string
- *                       avatar:
- *                         type: string
- *                       bio:
- *                         type: string
+ *                       // avatar: // Field commented out in User model
+ *                       // bio: // Field commented out in User model
  *       500:
  *         description: Server error
  */
@@ -324,7 +291,8 @@ const searchUsers = async (req, res) => {
         { lastName: { $regex: query, $options: 'i' } }
       ]
     })
-    .select('username firstName lastName avatar bio')
+    // FIX: Remove avatar and bio from select as they're commented out in User model
+    .select('username firstName lastName')
     .limit(20);
 
     res.json({ users });

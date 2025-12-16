@@ -102,14 +102,9 @@ class ChatTokenService {
         communityId: event.communityId.toString()
       };
 
-      console.log('Preparing to generate custom token with claims:', customClaims);
-
       // Generate the custom token using existing Firebase auth
       const customToken = await this.auth.createCustomToken(userId, customClaims);
 
-      console.log('Generated custom token preview:', customToken.substring(0, 50) + '...');
-      console.log('Token length:', customToken.length);
-      
       console.log(`✅ Generated chat token for user ${userId} with role ${role} for event ${eventId}`);
       
       return customToken;

@@ -91,8 +91,7 @@ class CommunityNearbyController {
 
       // Enhanced geospatial search - get all communities and filter by distance
       const allCommunities = await Community.find({})
-        .populate('ownerId', 'username firstName lastName avatar');
-
+        .populate('ownerId', 'username firstName lastName');
       // Filter communities by distance using Haversine formula
       const nearbyCommunities = allCommunities.filter(community => {
         let communityLat, communityLng;
@@ -200,7 +199,7 @@ class CommunityNearbyController {
           { 'location.city': { $in: searchPatterns } } // Improved schema
         ]
       })
-      .populate('ownerId', 'username firstName lastName avatar')
+      .populate('ownerId', 'username firstName lastName')
       .sort({ memberCount: -1, createdAt: -1 })
       .limit(limit);
 
@@ -321,7 +320,7 @@ class CommunityNearbyController {
           { 'location.city': { $in: allPatterns } }
         ]
       })
-      .populate('ownerId', 'username firstName lastName avatar')
+      .populate('ownerId', 'username firstName lastName')
       .sort({ memberCount: -1, createdAt: -1 })
       .limit(limit);
 
@@ -636,7 +635,7 @@ class CommunityNearbyController {
         const allMatchingCommunities = await Community.find({
           interest: { $in: interestPatterns }
         })
-        .populate('ownerId', 'username firstName lastName avatar');
+        .populate('ownerId', 'username firstName lastName');
 
         // Filter communities by distance from user's location
         const userLat = parseFloat(latitude);
@@ -704,7 +703,7 @@ class CommunityNearbyController {
         communities = await Community.find({
           interest: { $in: interestPatterns }
         })
-        .populate('ownerId', 'username firstName lastName avatar')
+        .populate('ownerId', 'username firstName lastName')
         .sort({ memberCount: -1 })
         .limit(parseInt(limit));
       }

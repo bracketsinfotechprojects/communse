@@ -39,10 +39,9 @@ const firebaseCommunityChatService = require('../services/firebaseCommunityChatS
 const getCommunityById = async (req, res) => {
   try {
     const community = await Community.findById(req.params.id)
-      .populate('ownerId', 'username firstName lastName avatar')
-      .populate('members', 'username firstName lastName avatar')
-      .populate('bannedMembers', 'username firstName lastName avatar');
-
+      .populate('ownerId', 'username firstName lastName')
+      .populate('members', 'username firstName lastName')
+      .populate('bannedMembers', 'username firstName lastName');
     if (!community) {
       return res.status(404).json({ message: 'Community not found' });
     }
@@ -274,8 +273,7 @@ const createCommunity = [
       });
 
       await community.save();
-      await community.populate('ownerId', 'username firstName lastName avatar');
-
+      await community.populate('ownerId', 'username firstName lastName');
       // Add community to owner's joined communities
       await User.findByIdAndUpdate(req.user.userId, {
         $push: { joinedCommunities: community._id }
@@ -399,10 +397,9 @@ const getAllCommunities = async (req, res) => {
     }
 
     const skip = (page - 1) * limit;
-
-    const communities = await Community.find(query)
-      .populate('ownerId', 'username firstName lastName avatar')
-      .sort({ [sortBy]: sortOrder })
+const communities = await Community.find(query)
+  .populate('ownerId', 'username firstName lastName')
+  .sort({ [sortBy]: sortOrder })
       .skip(skip)
       .limit(limit);
 
@@ -612,9 +609,8 @@ const getMyCommunities = async (req, res) => {
         { ownerId: userId }
       ]
     })
-    .populate('ownerId', 'username firstName lastName avatar')
+    .populate('ownerId', 'username firstName lastName')
     .sort({ createdAt: -1 });
-
     res.json({ communities });
 
   } catch (error) {
@@ -738,8 +734,7 @@ const updateCommunity = async (req, res) => {
     if (isPrivate !== undefined) community.isPrivate = isPrivate;
 
     await community.save();
-    await community.populate('ownerId', 'username firstName lastName avatar');
-
+    await community.populate('ownerId', 'username firstName lastName');
     res.json({
       message: 'Community updated successfully',
       community
@@ -835,9 +830,8 @@ const deleteCommunity = async (req, res) => {
 const getCommunityMembers = async (req, res) => {
   try {
     const community = await Community.findById(req.params.id)
-      .populate('members', 'username firstName lastName avatar createdAt')
-      .populate('ownerId', 'username firstName lastName avatar');
-
+      .populate('members', 'username firstName lastName createdAt')
+      .populate('ownerId', 'username firstName lastName');
     if (!community) {
       return res.status(404).json({ message: 'Community not found' });
     }
@@ -988,8 +982,7 @@ const updateCommunitySettings = async (req, res) => {
 const getPendingRequests = async (req, res) => {
   try {
     const community = await Community.findById(req.params.id)
-      .populate('pendingMembers.userId', 'username firstName lastName avatar');
-
+      .populate('pendingMembers.userId', 'username firstName lastName');
     if (!community) {
       return res.status(404).json({ message: 'Community not found' });
     }
@@ -1428,8 +1421,7 @@ const unbanUserFromCommunity = async (req, res) => {
 const getBannedUsers = async (req, res) => {
   try {
     const community = await Community.findById(req.params.id)
-      .populate('bannedMembers', 'username firstName lastName avatar');
-
+      .populate('bannedMembers', 'username firstName lastName');
     if (!community) {
       return res.status(404).json({ message: 'Community not found' });
     }

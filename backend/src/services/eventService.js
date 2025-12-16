@@ -33,11 +33,17 @@ class EventService {
         throw new Error('User must be a member of the community to create events');
       }
 
-      // Create event
+      // Create event with creator automatically added as attendee
       const event = new Event({
         ...eventData,
         createdBy: creatorId,
-        status: 'draft'
+        status: 'draft',
+        attendees: [{
+          userId: creatorId,
+          joinedAt: new Date(),
+          status: 'confirmed'
+        }],
+        currentAttendees: 1  // Start with creator as attendee
       });
 
       await event.save();
@@ -52,7 +58,8 @@ class EventService {
       
       await event.populate([
         { path: 'createdBy', select: 'firstName lastName' },
-        { path: 'communityId', select: 'name location' }
+        { path: 'communityId', select: 'name location' },
+        { path: 'attendees.userId', select: 'firstName lastName' }
       ]);
 
       return {
@@ -195,12 +202,8 @@ class EventService {
       };
     }
 
+    // Get attendee IDs from the attendees array (creator is now automatically included)
     const attendeeIds = freshEvent.attendees.map(attendee => attendee.userId.toString());
-    
-    // Add event creator to chat room if not already included
-    if (!attendeeIds.includes(freshEvent.createdBy.toString())) {
-      attendeeIds.push(freshEvent.createdBy.toString());
-    }
 
     const chatRoomData = {
       name: `Event: ${freshEvent.title}`,

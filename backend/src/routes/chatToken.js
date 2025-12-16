@@ -1,6 +1,7 @@
 const express = require('express');
 const chatTokenService = require('../services/chatTokenService');
 const { body, param, validationResult } = require('express-validator');
+const jwt = require('jsonwebtoken');
 
 const router = express.Router();
 
@@ -122,9 +123,24 @@ router.get('/token', [
 
     const token = authHeader.substring(7); // Remove 'Bearer ' prefix
     
-    // TODO: Implement JWT verification middleware here
-    // For now, we'll accept any token but log it
-    console.log('Received auth token:', token.substring(0, 20) + '...');
+    // Verify JWT token
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      console.log('✅ JWT token verified for user:', decoded.userId);
+      
+      // Store user info in request for potential future use
+      req.authUser = {
+        userId: decoded.userId,
+        role: decoded.role,
+        email: decoded.email
+      };
+    } catch (jwtError) {
+      console.error('❌ JWT verification failed:', jwtError.message);
+      return res.status(401).json({
+        success: false,
+        error: 'Invalid or expired token'
+      });
+    }
 
     // Extract parameters from query string or body
     const { userId, eventId } = req.query.userId ? req.query : req.body;

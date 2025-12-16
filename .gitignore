@@ -1,5 +1,23 @@
 node_modules
 *.sh
 *.py
+
+# Environment variables (CRITICAL - contains real credentials)
+.env
+.env.*
+!.env.example
+!.env.firebase-admin
+
+# Firebase credentials
+firebase_commapp.json
+
+# Ignore test files
+test_*
+debug_*
+debug-*
+*.test.js
+*.spec.js
 *.md
-firebase_commapp.json add this is gitignore
+
+# Ignore markdown files (optional - comment out if you want to track docs)
+#*.md

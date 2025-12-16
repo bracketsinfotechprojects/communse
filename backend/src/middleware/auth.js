@@ -24,7 +24,7 @@ const auth = async (req, res, next) => {
 
     // Attach user info to request
     req.user = {
-      userId: user._id,
+      userId: user._id.toString(), // Convert ObjectId to string for comparison
       role: user.role,
       isVerified: user.isVerified,
       email: user.email,
