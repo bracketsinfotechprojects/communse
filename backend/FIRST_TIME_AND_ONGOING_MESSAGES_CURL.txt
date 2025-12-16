@@ -1,0 +1,427 @@
+# 🔥 CURL COMMANDS: FIRST TIME MESSAGES & ONGOING MESSAGES - CommAPP API
+
+## 📋 **PREREQUISITE: Authentication**
+```bash
+# Step 1: Login to get token
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "user@example.com", "password": "password123"}'
+
+# Extract token from response
+TOKEN="your-jwt-token-from-login-response"
+```
+
+---
+
+## 🎯 **STEP 1: GET FIREBASE ROOM ID (REQUIRED FOR ALL MESSAGES)**
+```bash
+# Get Firebase room ID from event
+ROOM_ID=$(curl -s -X GET http://localhost:5000/api/events/EVENT_ID_HERE/chat/room \
+  -H "Authorization: Bearer $TOKEN" | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4)
+
+echo "Firebase Room ID: $ROOM_ID"
+```
+
+---
+
+## 💬 **FIRST TIME MESSAGES (Starting a New Conversation)**
+
+### 1. **Welcome/Introduction Message**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Hi everyone! 👋 I'\''m excited to be part of this event. Looking forward to connecting with everyone!",
+    "messageType": "text"
+  }'
+```
+
+### 2. **First Question/Engagement**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Hello everyone! This is my first time joining an event like this. Could someone tell me what we should expect today? 🤔",
+    "messageType": "text"
+  }'
+```
+
+### 3. **First Media Message (Photo)**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Just arrived at the venue! The setup looks amazing! 📸",
+    "messageType": "image"
+  }'
+```
+
+### 4. **First Check-in Message**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Good morning everyone! I'\''m here and ready to start. Who else has arrived?",
+    "messageType": "text"
+  }'
+```
+
+### 5. **First File Share**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Hi everyone! I'\''ve prepared some materials for today'\''s session. Here'\''s the agenda document 📄",
+    "messageType": "file"
+  }'
+```
+
+---
+
+## 🔄 **ONGOING MESSAGES (Continuing the Conversation)**
+
+### 6. **Direct Response to Someone**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Great question! I have the same wondering about the timing. Let'\''s see what the organizer says.",
+    "messageType": "text",
+    "replyTo": "msg_1765521236401_abc123def"
+  }'
+```
+
+### 7. **Follow-up Message**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Update on the previous point - I just checked with the venue and we have an extra 30 minutes if needed!",
+    "messageType": "text"
+  }'
+```
+
+### 8. **Photo During Event**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Look at this amazing presentation slide! The speaker did a fantastic job explaining the concept 🎯",
+    "messageType": "image"
+  }'
+```
+
+### 9. **Voice Note**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Voice note: Just wanted to share my thoughts on the discussion we had. The key takeaway for me was...",
+    "messageType": "audio"
+  }'
+```
+
+### 10. **Video Share**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Here'\''s a quick demo of what we discussed. This should help clarify the process! 🎥",
+    "messageType": "video"
+  }'
+```
+
+### 11. **Document Share**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "content": "Here'\''s the reference document I mentioned. Page 5 has the detailed explanation you were asking about.",
+    "messageType": "file"
+  }'
+```
+
+### 12. **Reaction to Previous Message**
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "emoji": "👍",
+    "roomId": "$ROOM_ID"
+  }'
+```
+
+### 13. **Heart Reaction**
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{
+    "emoji": "❤️",
+    "roomId": "$ROOM_ID"
+  }'
+```
+
+---
+
+## 📊 **COMPREHENSIVE FIRST TIME MESSAGE EXAMPLES**
+
+### Scenario 1: **New User Introduction**
+```bash
+# 1. Welcome message
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Hello everyone! I'\''m Sarah, new to this community. Excited to be here! 😊", "messageType": "text"}'
+
+# 2. Share photo
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Here'\''s a photo of me from last week'\''s conference 📸", "messageType": "image"}'
+
+# 3. Ask question
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "What'\''s the best way to get involved in this community? I'\''m looking to contribute and learn!", "messageType": "text"}'
+```
+
+### Scenario 2: **Event Participant Check-in**
+```bash
+# 1. Arrival message
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Good morning! I'\''ve just arrived at the venue. The setup looks incredible! 🏢", "messageType": "text"}'
+
+# 2. Share venue photo
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Here'\''s the main hall where we'\''ll be meeting. The lighting is perfect for presentations! ✨", "messageType": "image"}'
+
+# 3. Introduce yourself
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "I'\''m Alex, a software engineer from the tech team. Looking forward to the workshop!", "messageType": "text"}'
+```
+
+---
+
+## 🎯 **ONGOING CONVERSATION EXAMPLES**
+
+### Scenario 1: **Q&A Session**
+```bash
+# 1. Ask question
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Quick question about the implementation details. How do we handle error scenarios?", "messageType": "text"}'
+
+# 2. Reply to answer
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Perfect! That makes sense. So we use try-catch blocks with specific error handling?", "messageType": "text", "replyTo": "msg_1765521236500_previous_answer_id"}'
+
+# 3. Follow-up
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Could someone share an example of this pattern in practice?", "messageType": "text"}'
+```
+
+### Scenario 2: **Resource Sharing**
+```bash
+# 1. Share document
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "I found this amazing tutorial that covers everything we discussed today! 📚", "messageType": "file"}'
+
+# 2. Add context
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Chapter 3 has the exact code example you were looking for earlier", "messageType": "text"}'
+
+# 3. Express gratitude
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Thank you so much for sharing this! This will be super helpful for my project 🙏", "messageType": "text"}'
+```
+
+---
+
+## 🔄 **COMPLETE WORKFLOW AUTOMATION**
+
+### **First Time Message Workflow:**
+```bash
+#!/bin/bash
+
+# Configuration
+EVENT_ID="YOUR_EVENT_ID"
+TOKEN="YOUR_JWT_TOKEN"
+YOUR_NAME="Your Name"
+
+echo "🎯 Starting first-time message workflow..."
+
+# Get Firebase Room ID
+ROOM_ID=$(curl -s -X GET http://localhost:5000/api/events/$EVENT_ID/chat/room \
+  -H "Authorization: Bearer $TOKEN" | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4)
+
+echo "📱 Room ID: $ROOM_ID"
+
+# Send welcome message
+echo "💬 Sending welcome message..."
+curl -s -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"content\": \"Hello everyone! I'm $YOUR_NAME. Excited to be part of this event! 👋\", \"messageType\": \"text\"}"
+
+# Send introduction
+echo "👤 Sending introduction..."
+curl -s -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"content\": \"This is my first time here and I'm looking forward to learning from everyone!\", \"messageType\": \"text\"}"
+
+# Ask engagement question
+echo "❓ Asking engagement question..."
+curl -s -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"content\": \"What should I expect from today's session? Any tips for newcomers? 🤔\", \"messageType\": \"text\"}"
+
+echo "✅ First-time messages sent successfully!"
+```
+
+### **Ongoing Message Workflow:**
+```bash
+#!/bin/bash
+
+# Configuration
+ROOM_ID="room_1765521236401_hbyfwtdbw"
+TOKEN="YOUR_JWT_TOKEN"
+
+echo "🔄 Starting ongoing conversation workflow..."
+
+# Send follow-up message
+echo "💬 Sending follow-up..."
+curl -s -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Thanks for the great explanation! I have one more question about the implementation...", "messageType": "text"}'
+
+# Send reaction to previous message
+echo "👍 Adding reaction..."
+curl -s -X POST http://localhost:5000/api/chat/messages/msg_1765521236401_previous_message_id/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"emoji": "👍", "roomId": "'$ROOM_ID'"}'
+
+# Share additional resource
+echo "📚 Sharing resource..."
+curl -s -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Here\'s an additional resource that might help with the topic we discussed", "messageType": "file"}'
+
+echo "✅ Ongoing messages sent successfully!"
+```
+
+---
+
+## 📋 **QUICK REFERENCE COMMANDS**
+
+### **First Time Messages:**
+```bash
+# Welcome
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Hello everyone! I\'m new here and excited to be part of this!", "messageType": "text"}'
+
+# Introduction
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "My name is [Your Name] and I\'m here to learn and contribute!", "messageType": "text"}'
+
+# Question
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "What should I know about this community? Any tips for newcomers?", "messageType": "text"}'
+```
+
+### **Ongoing Messages:**
+```bash
+# Response
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Great point! I agree with your suggestion.", "messageType": "text", "replyTo": "msg_PREVIOUS_MESSAGE_ID"}'
+
+# Follow-up
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Update on my previous question - I found the answer!", "messageType": "text"}'
+
+# Share
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Here\'s a resource I found that might be helpful for everyone", "messageType": "file"}'
+```
+
+---
+
+## 🎯 **MESSAGE TYPE QUICK REFERENCE**
+
+| Type | Use Case | Example |
+|------|----------|---------|
+| `text` | Regular conversation | "Hello everyone!" |
+| `image` | Share photos/screenshots | Venue photos, screenshots |
+| `file` | Share documents/resources | PDFs, documents, links |
+| `audio` | Voice messages | Quick voice notes |
+| `video` | Video content | Demos, explanations |
+
+---
+
+## ⚡ **ONE-LINER QUICK TESTS**
+
+### **First Time Test:**
+```bash
+ROOM_ID=$(curl -s -X GET http://localhost:5000/api/events/YOUR_EVENT_ID/chat/room -H "Authorization: Bearer YOUR_TOKEN" | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4) && \
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"content": "Hello! This is my first message in this chat! 👋", "messageType": "text"}'
+```
+
+### **Ongoing Message Test:**
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/YOUR_ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"content": "Thanks for the warm welcome everyone! 😊", "messageType": "text"}'
+```
+
+**🎯 Use these commands to start engaging conversations in your CommAPP chat rooms!**

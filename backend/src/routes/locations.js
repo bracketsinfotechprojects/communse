@@ -7,6 +7,7 @@ const {
   getNearbyUsers
 } = require('../controllers/locationController');
 
+
 // All routes require authentication
 router.use(auth);
 
@@ -63,7 +64,7 @@ router.use(auth);
  *       500:
  *         description: Server error
  */
-router.put('/users/:id/location', updateUserLocation);
+router.put('/users/:id/location', auth, updateUserLocation);
 
 /**
  * @swagger
@@ -90,7 +91,7 @@ router.put('/users/:id/location', updateUserLocation);
  *       500:
  *         description: Server error
  */
-router.get('/users/:id/location', getUserLocation);
+router.get('/users/:id/location', auth, getUserLocation);
 
 /**
  * @swagger
@@ -137,6 +138,6 @@ router.get('/users/:id/location', getUserLocation);
  *       500:
  *         description: Server error
  */
-router.get('/locations/nearby', getNearbyUsers);
+router.get('/locations/nearby', auth, getNearbyUsers);
 
 module.exports = router;

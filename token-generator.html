@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Token Generator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a90e2;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #4a90e2;
+        }
+
+        .btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: background 0.3s;
+            width: 100%;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
+        }
+
+        .result {
+            margin-top: 20px;
+            padding: 20px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            background: #f8f9fa;
+        }
+
+        .result.success {
+            border-color: #27ae60;
+            background: #d4edda;
+        }
+
+        .result.error {
+            border-color: #e74c3c;
+            background: #f8d7da;
+        }
+
+        .token-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .claims {
+            background: #34495e;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 10px 0;
+        }
+
+        .instructions {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .instructions p {
+            color: #856404;
+            line-height: 1.5;
+        }
+
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            float: right;
+            margin-top: -5px;
+        }
+
+        .copy-btn:hover {
+            background: #545b62;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔑 Firebase Token Generator</h1>
+            <p>Get custom Firebase tokens from your backend API</p>
+        </div>
+
+        <div class="content">
+[new content]
+            <div class="instructions">
+                <h3>📋 How to Use</h3>
+                <p><strong>1.</strong> Make sure your backend is running: <code>cd backend && npm start</code></p>
+                <p><strong>2.</strong> Your backend already validates authentication - no extra Firebase auth needed!</p>
+                <p><strong>3.</strong> Fill in your User ID, Event ID, and Auth Token below</p>
+                <p><strong>4.</strong> Click "Generate Token" - Firebase will trust this custom token automatically</p>
+                <p><strong>5.</strong> Use the token in Firebase Chat Test UI (no additional authentication required!)</p>
+            </div>
+
+            <form id="tokenForm">
+                <div class="form-group">
+                    <label>Backend URL:</label>
+                    <input type="url" id="backendUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                </div>
+
+                <div class="form-group">
+                    <label>User ID:</label>
+                    <input type="text" id="userId" placeholder="Enter your user ID (24 chars)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Event ID:</label>
+                    <input type="text" id="eventId" placeholder="Enter event ID (24 chars)" required>
+                </div>
+
+                <div class="form-group">
+                    <label>Auth Token (Bearer):</label>
+                    <input type="text" id="authToken" placeholder="Enter your authentication token" required>
+                </div>
+
+                <button type="submit" class="btn btn-success">🔑 Generate Token</button>
+                <button type="button" class="btn" onclick="clearForm()">🗑️ Clear Form</button>
+            </form>
+
+            <div id="result" class="result" style="display: none;">
+                <h3 id="resultTitle"></h3>
+                <div id="resultContent"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('tokenForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const backendUrl = document.getElementById('backendUrl').value;
+            const userId = document.getElementById('userId').value;
+            const eventId = document.getElementById('eventId').value;
+            const authToken = document.getElementById('authToken').value;
+
+            // Validate input
+            if (!userId || !eventId || !authToken) {
+                showResult('error', '❌ Please fill in all fields');
+                return;
+            }
+
+            // Validate ID format (24 character hex)
+            if (!/^[0-9a-fA-F]{24}$/.test(userId)) {
+                showResult('error', '❌ User ID must be 24 hexadecimal characters');
+                return;
+            }
+
+            if (!/^[0-9a-fA-F]{24}$/.test(eventId)) {
+                showResult('error', '❌ Event ID must be 24 hexadecimal characters');
+                return;
+            }
+
+            try {
+                showResult('loading', '⏳ Generating token...');
+                
+                const url = `${backendUrl}/chat/token?userId=${userId}&eventId=${eventId}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    showSuccessResult(data);
+                } else {
+                    showResult('error', `❌ Error: ${data.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    showResult('error', '❌ Cannot connect to backend. Make sure it\'s running on the specified URL.');
+                } else {
+                    showResult('error', `❌ Request failed: ${error.message}`);
+                }
+            }
+        });
+
+        function showResult(type, message) {
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultContent = document.getElementById('resultContent');
+
+            resultDiv.className = `result ${type}`;
+            resultTitle.textContent = message;
+            resultContent.innerHTML = '';
+            resultDiv.style.display = 'block';
+        }
+
+        function showSuccessResult(data) {
+            const resultDiv = document.getElementById('result');
+            const resultTitle = document.getElementById('resultTitle');
+            const resultContent = document.getElementById('resultContent');
+
+            resultDiv.className = 'result success';
+            resultTitle.textContent = '✅ Token Generated Successfully!';
+            
+            resultContent.innerHTML = `
+                <h4>🎯 Your Firebase Custom Token:</h4>
+                <button class="copy-btn" onclick="copyToken('${data.token}')">📋 Copy</button>
+                <div class="token-display">${data.token}</div>
+                
+                <h4>📊 Token Claims:</h4>
+                <button class="copy-btn" onclick="copyClaims(JSON.stringify(data.claims, null, 2))">📋 Copy</button>
+                <div class="claims">${JSON.stringify(data.claims, null, 2)}</div>
+                
+                <h4>🚀 Next Steps:</h4>
+                <ol>
+                    <li>Copy the token above</li>
+                    <li>Open <code>firebase-chat-test-ui.html</code></li>
+                    <li>Use Quick Connect with:
+                        <ul>
+                            <li><strong>User ID:</strong> ${data.claims.userId}</li>
+                            <li><strong>Chat Token:</strong> [paste the token]</li>
+                            <li><strong>Event ID:</strong> ${data.claims.eventId}</li>
+                        </ul>
+                    </li>
+                    <li>Click "🚀 Connect to Chat" and start messaging!</li>
+                </ol>
+            `;
+
+            resultDiv.style.display = 'block';
+        }
+
+        function copyToken(token) {
+            navigator.clipboard.writeText(token).then(() => {
+                alert('Token copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = token;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Token copied to clipboard!');
+            });
+        }
+
+        function copyClaims(claims) {
+            navigator.clipboard.writeText(claims).then(() => {
+                alert('Claims copied to clipboard!');
+            }).catch(() => {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = claims;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                alert('Claims copied to clipboard!');
+            });
+        }
+
+        function clearForm() {
+            document.getElementById('tokenForm').reset();
+            document.getElementById('result').style.display = 'none';
+        }
+
+        // Add some example IDs for testing
+        function loadExampleData() {
+            // Check if there are any example IDs in the URL
+            const urlParams = new URLSearchParams(window.location.search);
+            const exampleUserId = urlParams.get('userId');
+            const exampleEventId = urlParams.get('eventId');
+            
+            if (exampleUserId) {
+                document.getElementById('userId').value = exampleUserId;
+            }
+            if (exampleEventId) {
+                document.getElementById('eventId').value = exampleEventId;
+            }
+        }
+
+        // Load example data on page load
+        window.onload = loadExampleData;
+    </script>
+</body>
+</html>

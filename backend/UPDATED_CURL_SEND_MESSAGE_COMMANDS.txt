@@ -1,0 +1,368 @@
+# 🔥 UPDATED CURL COMMANDS FOR SENDING MESSAGES - CommAPP API
+# Updated: 2025-12-12 - Fixed Firebase Room ID Validation Issue
+
+## 🚀 **RECOMMENDED WORKFLOW: Get Firebase Room ID from Event**
+
+### Step 1: Get Firebase Room ID from Event Document
+```bash
+curl -X GET http://localhost:5000/api/events/EVENT_ID_HERE/chat/room \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -H "Content-Type: application/json"
+```
+
+**Response Example:**
+```json
+{
+  "success": true,
+  "data": {
+    "eventId": "507f1f77bcf86cd799439011",
+    "chatRoomId": "room_1765521236401_hbyfwtdbw",
+    "chatRoomCreated": true,
+    "eventTitle": "Tech Meetup 2025"
+  }
+}
+```
+
+### Step 2: Extract Firebase Room ID and Send Message
+```bash
+# Extract room ID from response and send message
+ROOM_ID=$(curl -s -X GET http://localhost:5000/api/events/EVENT_ID_HERE/chat/room \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4)
+
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Hello everyone! Looking forward to this event!",
+    "messageType": "text"
+  }'
+```
+
+---
+
+## 📱 **COMPLETE MESSAGE EXAMPLES**
+
+### 1. Basic Text Message
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Hello everyone! How is everyone doing today?",
+    "messageType": "text"
+  }'
+```
+
+### 2. Message with Reply
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "I agree with that point completely!",
+    "messageType": "text",
+    "replyTo": "msg_1765521236401_abc123def"
+  }'
+```
+
+### 3. Image Message
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Check out this amazing view from the venue!",
+    "messageType": "image"
+  }'
+```
+
+### 4. File Message
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Here is the presentation document we discussed",
+    "messageType": "file"
+  }'
+```
+
+### 5. Audio Message
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Voice note about the project updates",
+    "messageType": "audio"
+  }'
+```
+
+### 6. Video Message
+```bash
+curl -X POST http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Demo video of the new feature in action",
+    "messageType": "video"
+  }'
+```
+
+---
+
+## 💬 **MESSAGE REACTIONS & MANAGEMENT**
+
+### Add Reaction to Message
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "emoji": "👍",
+    "roomId": "room_1765521236401_hbyfwtdbw"
+  }'
+```
+
+### Add Heart Reaction
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def/reactions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "emoji": "❤️",
+    "roomId": "room_1765521236401_hbyfwtdbw"
+  }'
+```
+
+### Mark Message as Read
+```bash
+curl -X POST http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def/read \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "roomId": "room_1765521236401_hbyfwtdbw"
+  }'
+```
+
+### Edit Your Own Message
+```bash
+curl -X PUT http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Updated message content - this is the corrected version",
+    "roomId": "room_1765521236401_hbyfwtdbw"
+  }'
+```
+
+### Delete Your Own Message
+```bash
+curl -X DELETE http://localhost:5000/api/chat/messages/msg_1765521236401_abc123def \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "roomId": "room_1765521236401_hbyfwtdbw"
+  }'
+```
+
+---
+
+## 📋 **HELPFUL UTILITY COMMANDS**
+
+### Get Messages from Chat Room
+```bash
+curl -X GET "http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw/messages?limit=50&offset=0" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Your Chat Rooms
+```bash
+curl -X GET http://localhost:5000/api/chat/rooms/user \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Event Chat Rooms
+```bash
+curl -X GET http://localhost:5000/api/chat/users/events \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Get Chat Room Details
+```bash
+curl -X GET http://localhost:5000/api/chat/rooms/room_1765521236401_hbyfwtdbw \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+---
+
+## 🔄 **COMPLETE AUTOMATED WORKFLOW**
+
+### Automated Event Message Script
+```bash
+#!/bin/bash
+
+# Configuration - Replace with your values
+EVENT_ID="507f1f77bcf86cd799439011"
+TOKEN="your-jwt-token-here"
+MESSAGE="Hello from the automated script!"
+
+echo "🔍 Getting Firebase Room ID for event: $EVENT_ID"
+
+# Get room info and extract Firebase room ID
+ROOM_INFO=$(curl -s -X GET http://localhost:5000/api/events/$EVENT_ID/chat/room \
+  -H "Authorization: Bearer $TOKEN")
+
+ROOM_ID=$(echo $ROOM_INFO | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4)
+
+if [ -z "$ROOM_ID" ]; then
+    echo "❌ Failed to get room ID"
+    exit 1
+fi
+
+echo "📱 Firebase Room ID: $ROOM_ID"
+
+echo "💬 Sending message..."
+SEND_RESPONSE=$(curl -s -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d "{\"content\": \"$MESSAGE\", \"messageType\": \"text\"}")
+
+echo "📤 Message Response:"
+echo "$SEND_RESPONSE" | jq '.'
+
+echo "📋 Getting latest messages..."
+curl -s -X GET "http://localhost:5000/api/chat/rooms/$ROOM_ID/messages?limit=5" \
+  -H "Authorization: Bearer $TOKEN" | jq '.'
+
+echo "✅ Workflow completed!"
+```
+
+### Quick One-Liner
+```bash
+# Replace YOUR_EVENT_ID and YOUR_TOKEN
+ROOM_ID=$(curl -s -X GET http://localhost:5000/api/events/YOUR_EVENT_ID/chat/room \
+  -H "Authorization: Bearer YOUR_TOKEN" | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4) && \
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"content": "Quick test message!", "messageType": "text"}'
+```
+
+---
+
+## 🧪 **TESTING COMMANDS**
+
+### Test if Backend is Running
+```bash
+curl -X GET http://localhost:5000/api/auth/test-login
+```
+
+### Test Token Validity
+```bash
+curl -X GET http://localhost:5000/api/auth/me \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### Test Complete Message Flow
+```bash
+# Replace with your actual values
+EVENT_ID="YOUR_EVENT_ID"
+TOKEN="YOUR_JWT_TOKEN"
+
+# Step 1: Get room info
+ROOM_INFO=$(curl -s -X GET http://localhost:5000/api/events/$EVENT_ID/chat/room \
+  -H "Authorization: Bearer $TOKEN)
+echo "Room Info: $ROOM_INFO"
+
+# Step 2: Send test message
+ROOM_ID=$(echo $ROOM_INFO | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4)
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"content": "Test message from flow!", "messageType": "text"}'
+
+# Step 3: Get messages
+curl -X GET "http://localhost:5000/api/chat/rooms/$ROOM_ID/messages?limit=10" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+---
+
+## ⚠️ **IMPORTANT NOTES**
+
+### Firebase Room ID Format:
+- Format: `room_TIMESTAMP_RANDOMSTRING`
+- Example: `room_1765521236401_hbyfwtdbw`
+- Generated by Firebase service automatically
+
+### Authentication:
+- All endpoints require valid JWT token
+- Token expires after configured time
+
+### Message Types:
+- `text` - Regular text messages (default)
+- `image` - Image attachments
+- `file` - Document attachments
+- `audio` - Voice messages
+- `video` - Video attachments
+
+### Limits:
+- Maximum 2000 characters per message content
+- Maximum 1000 participants per room
+
+### Permissions:
+- Only event attendees can send messages in event chat
+- Only message sender can edit/delete their messages
+- Room participants can view messages and add reactions
+
+---
+
+## 🔧 **TROUBLESHOOTING**
+
+### Common Issues:
+
+1. **401 Unauthorized:** Check if your JWT token is valid and not expired
+2. **403 Forbidden:** Ensure you have permission to send messages in that chat room
+3. **404 Not Found:** Verify the event ID and Firebase room ID exist
+4. **400 Bad Request:** Check message content length (max 2000 chars) and required fields
+
+### Debug Commands:
+```bash
+# Check backend status
+curl -X GET http://localhost:5000/api/auth/test-login
+
+# Check token
+curl -X GET http://localhost:5000/api/auth/me \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Check user rooms
+curl -X GET http://localhost:5000/api/chat/rooms/user \
+  -H "Authorization: Bearer YOUR_TOKEN"
+
+# Check event access
+curl -X GET http://localhost:5000/api/events/YOUR_EVENT_ID/chat/room \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+---
+
+## 🎯 **QUICK START SUMMARY**
+
+```bash
+# 1. Get Firebase Room ID
+ROOM_ID=$(curl -s -X GET http://localhost:5000/api/events/YOUR_EVENT_ID/chat/room \
+  -H "Authorization: Bearer YOUR_TOKEN" | grep -o '"chatRoomId":"[^"]*' | cut -d'"' -f4)
+
+# 2. Send Message
+curl -X POST http://localhost:5000/api/chat/rooms/$ROOM_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -d '{"content": "Hello from CommAPP!", "messageType": "text"}'
+
+# 3. Get Response
+curl -X GET "http://localhost:5000/api/chat/rooms/$ROOM_ID/messages?limit=5" \
+  -H "Authorization: Bearer YOUR_TOKEN"
+```
+
+**🎯 This workflow solves the Firebase room ID validation issue by extracting the room ID from the event document!**

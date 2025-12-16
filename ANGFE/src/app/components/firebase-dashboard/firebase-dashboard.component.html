@@ -1,0 +1,159 @@
+<div class="firebase-dashboard">
+  <header class="dashboard-header">
+    <h1>🚀 Angular Firebase Integration Demo</h1>
+    <p>This component demonstrates Firebase Authentication, Firestore, and Realtime Database integration</p>
+  </header>
+
+  <!-- Authentication Section -->
+  <section class="auth-section">
+    <h2>🔐 Authentication</h2>
+    
+    <div *ngIf="!user" class="auth-forms">
+      <div class="auth-form">
+        <h3>Sign In</h3>
+        <input 
+          type="email" 
+          [(ngModel)]="email" 
+          placeholder="Email"
+          class="input-field"
+        />
+        <input 
+          type="password" 
+          [(ngModel)]="password" 
+          placeholder="Password"
+          class="input-field"
+        />
+        <button 
+          (click)="signIn()" 
+          [disabled]="isLoading"
+          class="btn btn-primary"
+        >
+          {{ isLoading ? 'Signing In...' : 'Sign In' }}
+        </button>
+      </div>
+
+      <div class="auth-form">
+        <h3>Sign Up</h3>
+        <input 
+          type="email" 
+          [(ngModel)]="email" 
+          placeholder="Email"
+          class="input-field"
+        />
+        <input 
+          type="password" 
+          [(ngModel)]="password" 
+          placeholder="Password"
+          class="input-field"
+        />
+        <button 
+          (click)="signUp()" 
+          [disabled]="isLoading"
+          class="btn btn-success"
+        >
+          {{ isLoading ? 'Creating Account...' : 'Sign Up' }}
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="user" class="user-info">
+      <p>✅ Signed in as: <strong>{{ user.email }}</strong></p>
+      <button (click)="signOut()" class="btn btn-danger">Sign Out</button>
+    </div>
+
+    <div *ngIf="authMessage" class="message" [class.success]="authMessage.includes('success')" [class.error]="authMessage.includes('failed')">
+      {{ authMessage }}
+    </div>
+  </section>
+
+  <!-- Firestore Section -->
+  <section *ngIf="user" class="firestore-section">
+    <h2>📄 Firestore Database</h2>
+    
+    <div class="add-document">
+      <h3>Add New Document</h3>
+      <input 
+        type="text" 
+        [(ngModel)]="newDocument.title" 
+        placeholder="Document Title"
+        class="input-field"
+      />
+      <input 
+        type="text" 
+        [(ngModel)]="newDocument.description" 
+        placeholder="Description"
+        class="input-field"
+      />
+      <button 
+        (click)="addDocument()" 
+        [disabled]="isAddingDocument || !newDocument.title"
+        class="btn btn-primary"
+      >
+        {{ isAddingDocument ? 'Adding...' : 'Add Document' }}
+      </button>
+    </div>
+
+    <div class="documents-list">
+      <h3>Documents ({{ documents.length }})</h3>
+      <div *ngIf="documents.length === 0" class="empty-state">
+        <p>No documents found. Add your first document above!</p>
+      </div>
+      <div *ngFor="let doc of documents" class="document-card">
+        <h4>{{ doc.title }}</h4>
+        <p>{{ doc.description }}</p>
+        <small>By: {{ doc.author }} | Created: {{ doc.createdAt?.toDate ? doc.createdAt.toDate() : doc.createdAt }}</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- Realtime Database Section -->
+  <section *ngIf="user" class="realtime-section">
+    <h2>⚡ Realtime Database</h2>
+    
+    <div class="send-message">
+      <h3>Send Message</h3>
+      <div class="message-input-group">
+        <input 
+          type="text" 
+          [(ngModel)]="newMessage" 
+          placeholder="Type your message..."
+          class="input-field"
+          (keyup.enter)="sendMessage()"
+        />
+        <button 
+          (click)="sendMessage()" 
+          [disabled]="!newMessage.trim()"
+          class="btn btn-success"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+
+    <div class="messages-list">
+      <h3>Messages ({{ messages.length }})</h3>
+      <div *ngIf="messages.length === 0" class="empty-state">
+        <p>No messages yet. Send the first message above!</p>
+      </div>
+      <div *ngFor="let message of messages" class="message-card">
+        <div class="message-header">
+          <strong>{{ message.user }}</strong>
+          <small>{{ message.timestamp }}</small>
+        </div>
+        <p>{{ message.text }}</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Firebase Info Section -->
+  <section class="info-section">
+    <h2>ℹ️ Firebase Features Demonstrated</h2>
+    <ul class="features-list">
+      <li>✅ <strong>Authentication:</strong> User sign-in and sign-up with email/password</li>
+      <li>✅ <strong>Firestore:</strong> Create, read documents with real-time updates</li>
+      <li>✅ <strong>Realtime Database:</strong> Live message streaming</li>
+      <li>✅ <strong>Security Rules:</strong> Authenticated access control</li>
+      <li>✅ <strong>Error Handling:</strong> Proper error management and user feedback</li>
+    </ul>
+  </section>
+</div>

@@ -1,0 +1,207 @@
+# Event Creation cURL Examples
+
+## Prerequisites:
+1. First, get an authentication token by logging in:
+```bash
+curl -X POST http://localhost:5000/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "your-email@example.com", "password": "your-password"}'
+```
+
+2. Extract the token from the response and use it in the event creation request.
+
+## Event Creation cURL Commands:
+
+### 1. Create a Basic Event:
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "title": "Tech Meetup 2025",
+    "description": "Join us for an exciting tech meetup where we'll discuss the latest trends in web development, AI, and blockchain technology.",
+    "communityId": "COMMUNITY_ID_HERE",
+    "startTime": "2025-12-15T14:00:00.000Z",
+    "endTime": "2025-12-15T18:00:00.000Z",
+    "location": {
+      "city": "Mumbai",
+      "landmark": "Tech Park",
+      "coordinates": {
+        "latitude": 19.0760,
+        "longitude": 72.8777
+      },
+      "fullAddress": "Tech Park, Bandra Kurla Complex, Mumbai, Maharashtra 400051"
+    },
+    "category": "networking",
+    "maxAttendees": 50,
+    "isPublic": true,
+    "tags": ["technology", "networking", "web-development"],
+    "coverImage": "https://example.com/event-cover.jpg",
+    "requirements": "Laptop required for hands-on session",
+    "contactInfo": "contact@techmeetup.com"
+  }'
+```
+
+### 2. Create a Workshop Event:
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "title": "React Workshop - Build Your First App",
+    "description": "Learn React from scratch in this hands-on workshop. Perfect for beginners who want to get started with modern web development.",
+    "communityId": "COMMUNITY_ID_HERE",
+    "startTime": "2025-12-20T10:00:00.000Z",
+    "endTime": "2025-12-20T16:00:00.000Z",
+    "location": {
+      "city": "Bangalore",
+      "landmark": "Innovation Hub",
+      "coordinates": {
+        "latitude": 12.9716,
+        "longitude": 77.5946
+      }
+    },
+    "category": "workshop",
+    "maxAttendees": 30,
+    "isPublic": false,
+    "tags": ["react", "javascript", "frontend", "workshop"],
+    "requirements": "Basic knowledge of HTML, CSS, and JavaScript",
+    "contactInfo": "workshop@innovationhub.com"
+  }'
+```
+
+### 3. Create a Sports Event:
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "title": "Weekend Cricket Tournament",
+    "description": "Join us for a fun-filled cricket tournament. All skill levels welcome! Teams will be formed on the spot.",
+    "communityId": "COMMUNITY_ID_HERE",
+    "startTime": "2025-12-14T08:00:00.000Z",
+    "endTime": "2025-12-14T17:00:00.000Z",
+    "location": {
+      "city": "Delhi",
+      "landmark": "Central Sports Complex",
+      "coordinates": {
+        "latitude": 28.6139,
+        "longitude": 77.2090
+      }
+    },
+    "category": "sports",
+    "maxAttendees": 100,
+    "isPublic": true,
+    "tags": ["cricket", "sports", "tournament", "outdoor"],
+    "requirements": "Sports attire and comfortable shoes",
+    "contactInfo": "sports@community.com"
+  }'
+```
+
+### 4. Create a Social Event:
+```bash
+curl -X POST http://localhost:5000/api/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "title": "Community Potluck Dinner",
+    "description": "Bring your favorite dish and join us for an evening of good food and great company. A perfect opportunity to meet fellow community members!",
+    "communityId": "COMMUNITY_ID_HERE",
+    "startTime": "2025-12-21T18:30:00.000Z",
+    "endTime": "2025-12-21T21:30:00.000Z",
+    "location": {
+      "city": "Pune",
+      "landmark": "Community Center",
+      "coordinates": {
+        "latitude": 18.5204,
+        "longitude": 73.8567
+      }
+    },
+    "category": "social",
+    "maxAttendees": 40,
+    "isPublic": true,
+    "tags": ["food", "social", "community", "dinner"],
+    "requirements": "Please bring a dish to share",
+    "contactInfo": "events@communitycenter.org"
+  }'
+```
+
+## Event Creation Response:
+A successful event creation will return:
+```json
+{
+  "success": true,
+  "data": {
+    "_id": "event_id_here",
+    "title": "Event Title",
+    "description": "Event description",
+    "communityId": "community_id_here",
+    "createdBy": {
+      "_id": "user_id_here",
+      "firstName": "John",
+      "lastName": "Doe"
+    },
+    "startTime": "2025-12-15T14:00:00.000Z",
+    "endTime": "2025-12-15T18:00:00.000Z",
+    "location": {
+      "city": "Mumbai",
+      "landmark": "Tech Park",
+      "coordinates": {
+        "latitude": 19.076,
+        "longitude": 72.8777
+      }
+    },
+    "status": "draft",
+    "category": "networking",
+    "maxAttendees": 50,
+    "currentAttendees": 0,
+    "attendees": [],
+    "isPublic": true,
+    "tags": ["technology", "networking"],
+    "chatRoomCreated": false,
+    "chatRoomId": null,
+    "createdAt": "2025-12-12T06:15:00.000Z",
+    "updatedAt": "2025-12-12T06:15:00.000Z"
+  },
+  "message": "Event created successfully"
+}
+```
+
+## Next Steps After Event Creation:
+
+### 1. Publish the Event:
+```bash
+curl -X POST http://localhost:5000/api/events/EVENT_ID_HERE/publish \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### 2. Join the Event:
+```bash
+curl -X POST http://localhost:5000/api/events/EVENT_ID_HERE/join \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### 3. Get Event Chat Info:
+```bash
+curl -X GET http://localhost:5000/api/events/EVENT_ID_HERE/chat \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE"
+```
+
+### 4. Send Message in Event Chat:
+```bash
+curl -X POST http://localhost:5000/api/events/EVENT_ID_HERE/chat/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN_HERE" \
+  -d '{
+    "content": "Looking forward to this event!",
+    "messageType": "text"
+  }'
+```
+
+## Notes:
+- Replace `YOUR_JWT_TOKEN_HERE` with the actual JWT token from login
+- Replace `COMMUNITY_ID_HERE` with a valid community ID
+- Replace `EVENT_ID_HERE` with the actual event ID after creation
+- All events are created in "draft" status and need to be published manually
+- Event chat rooms are automatically created when events are published
+- Only community members can create events for that community

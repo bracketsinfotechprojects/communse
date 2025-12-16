@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-User Chat Tester</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: #4a90e2;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .content {
+            padding: 30px;
+        }
+
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+        }
+
+        .section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #4a90e2;
+            padding-bottom: 5px;
+        }
+
+        .user-card {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            border-left: 4px solid #4a90e2;
+        }
+
+        .user-card h4 {
+            color: #4a90e2;
+            margin-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .btn {
+            background: #4a90e2;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn:hover {
+            background: #357abd;
+        }
+
+        .btn-success {
+            background: #27ae60;
+        }
+
+        .btn-success:hover {
+            background: #219a52;
+        }
+
+        .btn-danger {
+            background: #e74c3c;
+        }
+
+        .btn-danger:hover {
+            background: #c0392b;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+        }
+
+        .btn-secondary:hover {
+            background: #545b62;
+        }
+
+        .token-display {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+            margin: 10px 0;
+            max-height: 150px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+
+        .copy-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            float: right;
+            margin-top: -5px;
+        }
+
+        .copy-btn:hover {
+            background: #545b62;
+        }
+
+        .instructions {
+            background: #e7f3ff;
+            border: 1px solid #b3d9ff;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .instructions h3 {
+            color: #0066cc;
+            margin-bottom: 10px;
+        }
+
+        .instructions ol {
+            color: #0066cc;
+            padding-left: 20px;
+        }
+
+        .instructions li {
+            margin-bottom: 5px;
+        }
+
+        .testing-links {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .testing-links h3 {
+            color: #155724;
+            margin-bottom: 10px;
+        }
+
+        .testing-links a {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 5px;
+        }
+
+        .testing-links a:hover {
+            background: #218838;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👥 Multi-User Chat Tester</h1>
+            <p>Generate tokens for multiple users and test real-time chat</p>
+        </div>
+
+        <div class="content">
+            <div class="instructions">
+                <h3>📋 How to Test Multi-User Chat</h3>
+                <ol>
+                    <li><strong>Generate tokens</strong> for each user below</li>
+                    <li><strong>Open test UI</strong> in multiple browser windows</li>
+                    <li><strong>Connect each window</strong> with different user credentials</li>
+                    <li><strong>Test messaging</strong> - messages should appear in real-time across all windows</li>
+                </ol>
+            </div>
+
+            <div class="testing-links">
+                <h3>🚀 Quick Test Links</h3>
+                <a href="firebase-chat-test-ui.html" target="_blank">Open Chat Test UI (New Window)</a>
+                <a href="token-generator.html" target="_blank">Open Token Generator (New Window)</a>
+            </div>
+
+            <div class="section">
+                <h3>⚙️ Backend Configuration</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Backend URL:</label>
+                        <input type="url" id="backendUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+                        <small style="color: #666; font-size: 12px;">Auto-detected backend URL</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Event ID (same for all users):</label>
+                        <input type="text" id="sharedEventId" value="test-event-123" placeholder="Enter event ID">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Auth Token (Bearer):</label>
+                    <input type="text" id="sharedAuthToken" placeholder="Enter your authentication token">
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>👤 User A</h3>
+                <div class="user-card">
+    [new content]
+                    <h4>User A Configuration</h4>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>User ID:</label>
+                                <input type="text" id="userAId" placeholder="Enter User A ID (24 chars)" value="user_a_12345678901234567890ab">
+                            </div>
+                            <div class="form-group">
+                                <label>Display Name:</label>
+                                <input type="text" id="userAName" placeholder="Enter User A Name" value="Alice Johnson">
+                            </div>
+                        </div>
+                        <button class="btn btn-success" onclick="generateToken('A')">🔑 Generate Token for User A</button>
+                        <button class="btn btn-secondary" onclick="openChatWindow('A')">💬 Open Chat Window A</button>
+                    
+                    <div id="tokenA" style="display: none;">
+                        <h5>🎯 User A Firebase Custom Token:</h5>
+                        <button class="copy-btn" onclick="copyToken('A')">📋 Copy</button>
+                        <div class="token-display" id="tokenADisplay"></div>
+                        
+                        <h5>📋 Ready-to-Use Credentials:</h5>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace;">
+                            <strong>User ID:</strong> <span id="userACredentials"></span><br>
+                            <strong>Chat Token:</strong> <span id="tokenACredentials" style="word-break: break-all;"></span><br>
+                            <strong>Event ID:</strong> <span id="eventACredentials"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>👤 User B</h3>
+                <div class="user-card">
+                    <h4>User B Configuration</h4>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>User ID:</label>
+                            <input type="text" id="userBId" placeholder="Enter User B ID (24 chars)" value="user_b_12345678901234567890ab">
+                        </div>
+                        <div class="form-group">
+                            <label>Display Name:</label>
+                            <input type="text" id="userBName" placeholder="Enter User B Name" value="Bob Smith">
+                        </div>
+                    </div>
+                    <button class="btn btn-success" onclick="generateToken('B')">🔑 Generate Token for User B</button>
+                    <button class="btn btn-secondary" onclick="openChatWindow('B')">💬 Open Chat Window B</button>
+                    
+                    <div id="tokenB" style="display: none;">
+                        <h5>🎯 User B Firebase Custom Token:</h5>
+                        <button class="copy-btn" onclick="copyToken('B')">📋 Copy</button>
+                        <div class="token-display" id="tokenBDisplay"></div>
+                        
+                        <h5>📋 Ready-to-Use Credentials:</h5>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; font-family: monospace;">
+                            <strong>User ID:</strong> <span id="userBCredentials"></span><br>
+                            <strong>Chat Token:</strong> <span id="tokenBCredentials" style="word-break: break-all;"></span><br>
+                            <strong>Event ID:</strong> <span id="eventBCredentials"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section">
+                <h3>🧪 Testing Instructions</h3>
+                <div style="background: #fff3cd; border: 1px solid #ffeaa7; padding: 20px; border-radius: 8px;">
+                    <h4>Step-by-Step Testing:</h4>
+                    <ol>
+                        <li><strong>Generate tokens</strong> for both User A and User B above</li>
+                        <li><strong>Open Chat Window A</strong> - Use User A's credentials</li>
+                        <li><strong>Open Chat Window B</strong> - Use User B's credentials</li>
+                        <li><strong>Verify connection</strong> - Both windows should show "Authenticated" and "In Chat"</li>
+                        <li><strong>Send test messages</strong> from each window</li>
+                        <li><strong>Verify real-time sync</strong> - Messages should appear instantly in both windows</li>
+                    </ol>
+                    
+                    <h4>Success Indicators:</h4>
+                    <ul>
+                        <li>✅ Each window shows different user as authenticated</li>
+                        <li>✅ Messages appear in real-time across all windows</li>
+                        <li>✅ User names display correctly</li>
+                        <li>✅ No authentication errors in debug log</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let tokenA = '';
+        let tokenB = '';
+
+        async function generateToken(user) {
+            const backendUrl = document.getElementById('backendUrl').value;
+            const eventId = document.getElementById('sharedEventId').value;
+            const authToken = document.getElementById('sharedAuthToken').value;
+            const userId = document.getElementById(`user${user}Id`).value;
+
+            if (!userId || !eventId || !authToken) {
+                alert('Please fill in all required fields (Backend URL, Event ID, and Auth Token)');
+                return;
+            }
+
+            try {
+                const url = `${backendUrl}/chat/token?userId=${userId}&eventId=${eventId}`;
+                
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Store token
+                    window[`token${user}`] = data.token;
+                    
+                    console.log(`✅ Token generated for User ${user}:`, data.token);
+                    
+                    // Display token
+                    document.getElementById(`token${user}`).style.display = 'block';
+                    document.getElementById(`token${user}Display`).textContent = data.token;
+                    
+                    // Update credentials display
+                    document.getElementById(`user${user}Credentials`).textContent = userId;
+                    document.getElementById(`token${user}Credentials`).textContent = data.token;
+                    document.getElementById(`event${user}Credentials`).textContent = eventId;
+                    
+                    alert(`✅ Token generated successfully for User ${user}! Token length: ${data.token.length}`);
+                } else {
+                    alert(`❌ Error generating token for User ${user}: ${data.error || 'Unknown error'}`);
+                }
+
+            } catch (error) {
+                alert(`❌ Request failed: ${error.message}`);
+            }
+        }
+
+        function copyToken(user) {
+            const token = window[`token${user}`];
+            if (token) {
+                navigator.clipboard.writeText(token).then(() => {
+                    alert(`Token ${user} copied to clipboard!`);
+                }).catch(() => {
+                    // Fallback for older browsers
+                    const textArea = document.createElement('textarea');
+                    textArea.value = token;
+                    document.body.appendChild(textArea);
+                    textArea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textArea);
+                    alert(`Token ${user} copied to clipboard!`);
+                });
+            }
+        }
+
+        function openChatWindow(user) {
+            const userId = document.getElementById(`user${user}Id`).value;
+            const userName = document.getElementById(`user${user}Name`).value;
+            const token = window[`token${user}`];
+            const eventId = document.getElementById('sharedEventId').value;
+            
+            if (!token) {
+                alert(`Please generate token for User ${user} first!`);
+                return;
+            }
+
+            // Open chat test UI with pre-filled credentials including display name
+            const chatUrl = `firebase-chat-test-ui.html?userId=${encodeURIComponent(userId)}&userName=${encodeURIComponent(userName)}&token=${encodeURIComponent(token)}&eventId=${encodeURIComponent(eventId)}`;
+            window.open(chatUrl, `ChatWindow${user}`, 'width=800,height=600');
+        }
+
+        // Auto-fill event ID for all users
+        document.getElementById('sharedEventId').addEventListener('input', function() {
+            const eventId = this.value;
+            document.getElementById('eventACredentials').textContent = eventId;
+            document.getElementById('eventBCredentials').textContent = eventId;
+        });
+
+        // Auto-detect backend URL based on current location
+        function autoDetectBackendUrl() {
+            const backendUrlInput = document.getElementById('backendUrl');
+            const currentHost = window.location.hostname;
+            const currentPort = window.location.port;
+            
+            // If we're on localhost, assume backend is on port 5000
+            if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+                // Use different port if current port is 5000 (avoid conflict)
+                const backendPort = currentPort === '5000' ? '5001' : '5000';
+                backendUrlInput.value = `http://${currentHost}:${backendPort}`;
+            }
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            autoDetectBackendUrl();
+        });
+    </script>
+</body>
+</html>

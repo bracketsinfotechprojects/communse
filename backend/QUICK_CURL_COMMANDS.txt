@@ -1,0 +1,56 @@
+# QUICK CURL COMMANDS FOR FIREBASE API TESTING
+# Make sure your backend is running: npm run dev (port 5000)
+
+# 1. CREATE TEST USER & LOGIN
+curl -X POST "http://localhost:5000/api/auth/create-debug-user" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "password123", "username": "testuser"}'
+
+# 2. LOGIN (save the token from response)
+curl -X POST "http://localhost:5000/api/auth/login" \
+  -H "Content-Type: application/json" \
+  -d '{"email": "test@example.com", "password": "password123"}'
+
+# 3. GET PROFILE (replace YOUR_JWT_TOKEN)
+curl -X GET "http://localhost:5000/api/auth/me" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# 4. CREATE CHAT ROOM (Firebase Integration)
+curl -X POST "http://localhost:5000/api/chat/rooms" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"name": "Test Room", "type": "community"}'
+
+# 5. SEND MESSAGE (Firebase Real-time Sync)
+curl -X POST "http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"content": "Hello Firebase!", "messageType": "text"}'
+
+# 6. GET MESSAGES
+curl -X GET "http://localhost:5000/api/chat/rooms/CHAT_ROOM_ID/messages" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# 7. UPDATE PUSH TOKEN (Firebase Cloud Messaging)
+curl -X POST "http://localhost:5000/api/chat/push-token" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"pushToken": "YOUR_FIREBASE_PUSH_TOKEN_HERE"}'
+
+# 8. UPDATE ONLINE STATUS (Firebase Presence)
+curl -X POST "http://localhost:5000/api/chat/status" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN" \
+  -d '{"isOnline": true}'
+
+# UTILITIES
+curl -X GET "http://localhost:5000/api/auth/test-login"
+curl -X GET "http://localhost:5000/api/chat/rooms" \
+  -H "Authorization: Bearer YOUR_JWT_TOKEN"
+
+# NOTES:
+# 1. Replace YOUR_JWT_TOKEN with actual token from login response
+# 2. Replace CHAT_ROOM_ID with actual chat room ID from creation response
+# 3. Get Firebase push token from frontend: npm run dev (frontend) then use FirebaseExample component
+# 4. All endpoints except /auth/* require JWT token
+# 5. Backend runs on port 5000 (not 3001)

@@ -2,6 +2,7 @@ const { body, validationResult } = require('express-validator');
 const Community = require('../models/Community');
 const User = require('../models/User');
 const LocationService = require('../services/locationService');
+const firebaseCommunityChatService = require('../services/firebaseCommunityChatService');
 
 /**
  * @swagger
@@ -279,6 +280,22 @@ const createCommunity = [
       await User.findByIdAndUpdate(req.user.userId, {
         $push: { joinedCommunities: community._id }
       });
+
+      // Create default community chat room
+      try {
+        await firebaseCommunityChatService.createChatRoom({
+          name: `${community.name} - General Discussion`,
+          type: 'community',
+          description: 'General discussion for community members',
+          communityId: community._id.toString(),
+          createdBy: req.user.userId,
+          category: 'general',
+          isPrivate: false
+        });
+      } catch (chatError) {
+        console.error('Failed to create default community chat:', chatError);
+        // Don't fail community creation if chat room creation fails
+      }
 
       res.status(201).json({
         message: 'Community created successfully',
