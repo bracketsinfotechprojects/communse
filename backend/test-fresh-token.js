@@ -7,7 +7,7 @@ const https = require('https');
 // The exact token from your curl command
 const FRESH_TOKEN = "";
 
-const API_KEY = "AIzaSyCpg6ePltV5gShCAzGsL0vTvfNCtX_7WTM";
+const API_KEY = "";
 
 /**
  * Decode the JWT token to show its contents
