@@ -23,6 +23,7 @@ const locationRoutes = require('./routes/locations');
 const chatRoutes = require('./routes/chat');
 const chatTokenRoutes = require('./routes/chatToken');
 const firebaseConfigRoutes = require('./routes/firebaseConfig');
+const notificationRoutes = require('./routes/notifications');
 
 const app = express();
 
@@ -77,9 +78,11 @@ app.use('/api', locationRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/chat', chatTokenRoutes); // Chat token routes
 app.use('/firebase', firebaseConfigRoutes); // Firebase config endpoint
+app.use('/api/notifications', notificationRoutes); // Notification management routes
 
 console.log('✅ Chat token routes mounted at /chat');
 console.log('✅ Firebase config endpoint mounted at /firebase');
+console.log('✅ Notification routes mounted at /api/notifications');
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {

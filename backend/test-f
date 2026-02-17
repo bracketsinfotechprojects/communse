@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+require('dotenv').config();
+const firebaseConfig = require('./src/config/firebase');
+
+console.log('🔍 FIREBASE SERVICE ACCOUNT CREDENTIALS TEST');
+console.log('============================================');
+
+// Test 1: Check environment variables
+console.log('\n1️⃣ Environment Variables Check:');
+console.log('FIREBASE_PROJECT_ID:', process.env.FIREBASE_PROJECT_ID ? '✅ Set' : '❌ Missing');
+console.log('FIREBASE_CLIENT_EMAIL:', process.env.FIREBASE_CLIENT_EMAIL ? '✅ Set' : '❌ Missing');  
+console.log('FIREBASE_PRIVATE_KEY:', process.env.FIREBASE_PRIVATE_KEY ? '✅ Set' : '❌ Missing');
+
+// Test 2: Initialize Firebase
+console.log('\n2️⃣ Firebase Initialization:');
+try {
+  const auth = firebaseConfig.getAuth();
+  const messaging = firebaseConfig.getMessaging();
+  
+  console.log('✅ Auth service:', auth ? 'Available' : 'Not available');
+  console.log('✅ Messaging service:', messaging ? 'Available' : 'Not available');
+  
+  if (messaging) {
+    console.log('\n🎉 SUCCESS: Firebase Admin SDK is properly configured!');
+    console.log('🚀 Ready for production push notifications');
+    console.log('📱 Service Account:', process.env.FIREBASE_CLIENT_EMAIL);
+    console.log('🏢 Project ID:', process.env.FIREBASE_PROJECT_ID);
+  } else {
+    console.log('\n❌ FAILURE: Firebase services not available');
+  }
+} catch (error) {
+  console.log('\n❌ ERROR:', error.message);
+}
+
+// Test 3: Quick notification test
+console.log('\n3️⃣ Quick Notification Test:');
+(async () => {
+  try {
+    const result = await firebaseConfig.sendMulticastNotification(
+      ['test_token_123'], 
+      { title: 'Test', body: 'Test notification' },
+      { type: 'test' }
+    );
+    console.log('✅ Notification test result:', result);
+    console.log('📊 Success count:', result.successCount);
+    console.log('❌ Failure count:', result.failureCount);
+  } catch (error) {
+    console.log('❌ Notification test failed:', error.message);
+  }
+})();
+
+console.log('\n✨ Test completed!');

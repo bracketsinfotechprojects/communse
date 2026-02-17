@@ -2,6 +2,7 @@ const Event = require('../models/Event');
 const Community = require('../models/Community');
 const User = require('../models/User');
 const firebaseCommunityChatService = require('./firebaseCommunityChatService');
+const notificationService = require('./notificationService');
 
 class EventService {
   constructor() {
@@ -169,6 +170,15 @@ class EventService {
         { path: 'communityId', select: 'name location' },
         { path: 'attendees.userId', select: 'firstName lastName' }
       ]);
+
+      // Send push notifications to nearby users with matching interests
+      try {
+        await notificationService.notifyEventCreation(event, event.createdBy);
+        console.log('Event publication notifications sent successfully');
+      } catch (notificationError) {
+        console.error('Failed to send event publication notifications:', notificationError);
+        // Don't fail event publish if notification fails
+      }
 
       return {
         success: true,

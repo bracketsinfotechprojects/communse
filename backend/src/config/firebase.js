@@ -68,7 +68,15 @@ class FirebaseConfig {
             this.auth = new MockFirebaseAuth();
             this.messaging = {
               send: async () => 'mock-message-id',
-              sendMulticast: async () => ({ successCount: 1, failureCount: 0 })
+              sendMulticast: async (message) => {
+                console.log('🔧 Mock multicast notification:', message.tokens?.length || 0, 'tokens');
+                const tokenCount = message.tokens?.length || 0;
+                return {
+                  successCount: tokenCount,
+                  failureCount: 0,
+                  responses: message.tokens?.map(() => ({ success: true })) || []
+                };
+              }
             };
             this.db = null;
             return;
@@ -110,7 +118,15 @@ class FirebaseConfig {
       this.auth = new MockFirebaseAuth();
       this.messaging = {
         send: async () => 'mock-message-id',
-        sendMulticast: async () => ({ successCount: 1, failureCount: 0 })
+        sendMulticast: async (message) => {
+          console.log('🔧 Mock multicast notification:', message.tokens?.length || 0, 'tokens');
+          const tokenCount = message.tokens?.length || 0;
+          return {
+            successCount: tokenCount,
+            failureCount: 0,
+            responses: message.tokens?.map(() => ({ success: true })) || []
+          };
+        }
       };
       this.db = null;
       
@@ -186,6 +202,12 @@ class FirebaseConfig {
       console.log('📱 Mock multicast notification sent (Firebase not initialized)');
       return { successCount: tokens.length, failureCount: 0 };
     }
+    
+    if (!tokens || tokens.length === 0) {
+      console.log('📱 No tokens provided for multicast notification');
+      return { successCount: 0, failureCount: 0 };
+    }
+    
     try {
       const message = {
         notification,
@@ -193,11 +215,58 @@ class FirebaseConfig {
         tokens
       };
 
-      const response = await this.messaging.sendMulticast(message);
-      console.log('📱 Multicast notification sent:', response);
-      return response;
+      console.log(`📱 Sending multicast notification to ${tokens.length} tokens`);
+      
+      // Check if sendEachForMulticast method exists (Firebase Admin SDK v13+)
+      if (typeof this.messaging.sendEachForMulticast === 'function') {
+        console.log('📱 Using sendEachForMulticast method (Firebase Admin SDK v13+)');
+        const response = await this.messaging.sendEachForMulticast(message);
+        console.log('📱 Multicast notification sent:', response);
+        return response;
+      }
+      // Check if sendMulticast method exists (older versions)
+      else if (typeof this.messaging.sendMulticast === 'function') {
+        console.log('📱 Using sendMulticast method (older Firebase SDK)');
+        const response = await this.messaging.sendMulticast(message);
+        console.log('📱 Multicast notification sent:', response);
+        return response;
+      }
+      // Fallback: send notifications individually
+      else {
+        console.error('❌ No multicast method available, falling back to individual notifications');
+        
+        let successCount = 0;
+        let failureCount = 0;
+        const responses = [];
+        
+        for (const token of tokens) {
+          try {
+            const response = await this.messaging.send({
+              notification,
+              data,
+              token
+            });
+            successCount++;
+            responses.push({ success: true, response });
+          } catch (error) {
+            failureCount++;
+            responses.push({ success: false, error: error.message });
+          }
+        }
+        
+        console.log(`📱 Individual notifications: ${successCount} success, ${failureCount} failed`);
+        return { successCount, failureCount, responses };
+      }
     } catch (error) {
-      console.error('Error sending multicast notification:', error);
+      console.error('❌ Error sending multicast notification:', error);
+      
+      // If sendEachForMulticast fails completely, try fallback to individual sends
+      if (error.message && (error.message.includes('sendEachForMulticast is not a function') ||
+                           error.message.includes('sendMulticast is not a function'))) {
+        console.log('🔧 Attempting fallback to individual notifications...');
+        return this.sendMulticastNotification(tokens, notification, data);
+      }
+      
       throw error;
     }
   }

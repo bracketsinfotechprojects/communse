@@ -239,7 +239,7 @@ router.get('/search/:query', auth, searchUsers);
  *       500:
  *         description: Server error
  */
-router.put('/:id/interests', updateUserInterests);
+router.put('/:id/interests', auth, updateUserInterests);
 
 /**
  * @swagger

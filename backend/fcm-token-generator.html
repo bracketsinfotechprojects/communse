@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FCM Token Generator</title>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .result {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            display: none;
+        }
+        .error {
+            color: red;
+            background-color: #ffebee;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+            display: none;
+        }
+        .curl-command {
+            background-color: #f4f4f4;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
+        .token-display {
+            word-break: break-all;
+            background-color: #e8f5e8;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔥 FCM Token Generator for Testing</h1>
+        <p>This tool helps you generate FCM tokens for testing your push notification API endpoints.</p>
+        
+        <div class="form-group">
+            <label for="authToken">Your JWT Auth Token:</label>
+            <input type="text" id="authToken" placeholder="Enter your JWT token from login">
+        </div>
+
+        <div class="form-group">
+            <label for="platform">Platform:</label>
+            <select id="platform">
+                <option value="web">Web Browser</option>
+                <option value="android">Android</option>
+                <option value="ios">iOS</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="deviceId">Device ID (Optional):</label>
+            <input type="text" id="deviceId" placeholder="e.g., test-device-web-1">
+        </div>
+
+        <div class="form-group">
+            <label for="apiUrl">API Base URL:</label>
+            <input type="text" id="apiUrl" value="http://localhost:5000" placeholder="http://localhost:5000">
+        </div>
+
+        <button onclick="generateDummyFCMToken()">🎲 Generate Dummy FCM Token</button>
+        <button onclick="registerTokenWithAPI()">📤 Register Token with API</button>
+        <button onclick="generateCurlCommand()">📋 Generate cURL Command</button>
+
+        <div id="error" class="error"></div>
+
+        <div id="result" class="result">
+            <h3>Generated Payload:</h3>
+            <div id="payloadDisplay" class="token-display"></div>
+            
+            <h3>Generated FCM Token:</h3>
+            <div id="tokenDisplay" class="token-display"></div>
+            
+            <div id="curlCommand" class="curl-command" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentFcmToken = null;
+        let currentPayload = null;
+
+        function showError(message) {
+            const errorDiv = document.getElementById('error');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            setTimeout(() => {
+                errorDiv.style.display = 'none';
+            }, 5000);
+        }
+
+        function showResult(data) {
+            const resultDiv = document.getElementById('result');
+            document.getElementById('payloadDisplay').textContent = JSON.stringify(data.payload, null, 2);
+            document.getElementById('tokenDisplay').textContent = data.token;
+            resultDiv.style.display = 'block';
+        }
+
+        function generateDummyFCMToken() {
+            try {
+                const platform = document.getElementById('platform').value;
+                const deviceId = document.getElementById('deviceId').value || `test-device-${platform}-${Date.now()}`;
+                
+                // Generate a realistic-looking FCM token
+                const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+                let token = '';
+                for (let i = 0; i < 152; i++) { // FCM tokens are typically around 152 characters
+                    token += chars.charAt(Math.floor(Math.random() * chars.length));
+                }
+                
+                currentFcmToken = token;
+                currentPayload = {
+                    token: token,
+                    platform: platform,
+                    deviceId: deviceId
+                };
+                
+                showResult({
+                    token: token,
+                    payload: currentPayload
+                });
+                
+            } catch (error) {
+                showError('Error generating token: ' + error.message);
+            }
+        }
+
+        async function registerTokenWithAPI() {
+            try {
+                if (!currentFcmToken) {
+                    showError('Please generate an FCM token first');
+                    return;
+                }
+
+                const authToken = document.getElementById('authToken').value;
+                if (!authToken) {
+                    showError('Please enter your JWT auth token');
+                    return;
+                }
+
+                const apiUrl = document.getElementById('apiUrl').value;
+                const endpoint = `${apiUrl}/api/notifications/fcm-token`;
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${authToken}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(currentPayload)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showResult({
+                        token: currentFcmToken,
+                        payload: currentPayload,
+                        apiResponse: result
+                    });
+                } else {
+                    showError(`API Error (${response.status}): ${JSON.stringify(result)}`);
+                }
+
+            } catch (error) {
+                showError('Error calling API: ' + error.message);
+            }
+        }
+
+        function generateCurlCommand() {
+            if (!currentFcmToken) {
+                showError('Please generate an FCM token first');
+                return;
+            }
+
+            const authToken = document.getElementById('authToken').value || '{{authToken}}';
+            const apiUrl = document.getElementById('apiUrl').value || 'http://localhost:5000';
+            
+            const curlCommand = `curl -X POST ${apiUrl}/api/notifications/fcm-token \\
+  -H "Authorization: Bearer ${authToken}" \\
+  -H "Content-Type: application/json" \\
+  -d '${JSON.stringify(currentPayload, null, 2)}'`;
+
+            document.getElementById('curlCommand').textContent = curlCommand;
+            document.getElementById('curlCommand').style.display = 'block';
+        }
+
+        // Auto-generate token on page load
+        window.onload = function() {
+            document.getElementById('deviceId').value = `test-device-web-${Date.now()}`;
+            generateDummyFCMToken();
+        };
+    </script>
+</body>
+</html>

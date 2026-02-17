@@ -139,6 +139,62 @@ const userSchema = new mongoose.Schema({
   lastLogin: {
     type: Date,
     default: Date.now
+  },
+
+  // Firebase Cloud Messaging Tokens
+  fcmTokens: [{
+    token: {
+      type: String,
+      required: true,
+      unique: true
+    },
+    platform: {
+      type: String,
+      enum: ['web', 'android', 'ios'],
+      required: true
+    },
+    deviceId: {
+      type: String,
+      trim: true
+    },
+    isActive: {
+      type: Boolean,
+      default: true
+    },
+    registeredAt: {
+      type: Date,
+      default: Date.now
+    },
+    lastUsed: {
+      type: Date,
+      default: Date.now
+    }
+  }],
+
+  // Notification Preferences
+  notificationSettings: {
+    communityUpdates: {
+      type: Boolean,
+      default: true
+    },
+    eventUpdates: {
+      type: Boolean,
+      default: true
+    },
+    nearbyCommunities: {
+      type: Boolean,
+      default: true
+    },
+    nearbyEvents: {
+      type: Boolean,
+      default: true
+    },
+    radius: {
+      type: Number,
+      default: 25, // Default radius in kilometers
+      min: [1, 'Radius must be at least 1 km'],
+      max: [100, 'Radius cannot exceed 100 km']
+    }
   }
 }, {
   timestamps: true,
@@ -176,6 +232,18 @@ userSchema.index({ 'location.city': 1 });
 userSchema.index({ 'location.state': 1 });
 userSchema.index({ 'location.country': 1 });
 userSchema.index({ 'location.lastUpdated': -1 });
+
+// FCM Token indexes
+userSchema.index({ 'fcmTokens.token': 1 }, { unique: true });
+userSchema.index({ 'fcmTokens.isActive': 1 });
+userSchema.index({ 'fcmTokens.platform': 1 });
+
+// Notification settings indexes
+userSchema.index({ 'notificationSettings.communityUpdates': 1 });
+userSchema.index({ 'notificationSettings.eventUpdates': 1 });
+userSchema.index({ 'notificationSettings.nearbyCommunities': 1 });
+userSchema.index({ 'notificationSettings.nearbyEvents': 1 });
+userSchema.index({ 'notificationSettings.radius': 1 });
 
 // Virtual for full name
 userSchema.virtual('fullName').get(function() {
@@ -234,6 +302,70 @@ userSchema.methods.toJSON = function() {
   const user = this.toObject();
   delete user.passwordHash;
   return user;
+};
+
+// FCM Token Management Methods
+userSchema.methods.addFcmToken = function(token, platform, deviceId = null) {
+  // Check if token already exists
+  const existingTokenIndex = this.fcmTokens.findIndex(t => t.token === token);
+  
+  if (existingTokenIndex !== -1) {
+    // Update existing token
+    this.fcmTokens[existingTokenIndex].lastUsed = new Date();
+    this.fcmTokens[existingTokenIndex].isActive = true;
+    this.fcmTokens[existingTokenIndex].platform = platform;
+    this.fcmTokens[existingTokenIndex].deviceId = deviceId;
+  } else {
+    // Add new token
+    this.fcmTokens.push({
+      token,
+      platform,
+      deviceId,
+      isActive: true,
+      registeredAt: new Date(),
+      lastUsed: new Date()
+    });
+  }
+  
+  return this.save();
+};
+
+userSchema.methods.removeFcmToken = function(token) {
+  this.fcmTokens = this.fcmTokens.filter(t => t.token !== token);
+  return this.save();
+};
+
+userSchema.methods.deactivateFcmToken = function(token) {
+  const tokenIndex = this.fcmTokens.findIndex(t => t.token === token);
+  if (tokenIndex !== -1) {
+    this.fcmTokens[tokenIndex].isActive = false;
+    return this.save();
+  }
+  return Promise.resolve(this);
+};
+
+userSchema.methods.getActiveFcmTokens = function() {
+  return this.fcmTokens.filter(token => token.isActive).map(token => token.token);
+};
+
+userSchema.methods.updateNotificationSettings = function(settings) {
+  if (settings.communityUpdates !== undefined) {
+    this.notificationSettings.communityUpdates = settings.communityUpdates;
+  }
+  if (settings.eventUpdates !== undefined) {
+    this.notificationSettings.eventUpdates = settings.eventUpdates;
+  }
+  if (settings.nearbyCommunities !== undefined) {
+    this.notificationSettings.nearbyCommunities = settings.nearbyCommunities;
+  }
+  if (settings.nearbyEvents !== undefined) {
+    this.notificationSettings.nearbyEvents = settings.nearbyEvents;
+  }
+  if (settings.radius !== undefined) {
+    this.notificationSettings.radius = settings.radius;
+  }
+  
+  return this.save();
 };
 
 module.exports = mongoose.model('User', userSchema);

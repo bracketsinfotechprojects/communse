@@ -5,8 +5,8 @@ const options = {
     openapi: '3.0.0',
     info: {
       title: 'CommAPP API',
-      version: '2.0.0',
-      description: 'API documentation for CommAPP backend - Event Management & Community Platform with Firebase Chat',
+      version: '2.1.0',
+      description: 'API documentation for CommAPP backend - Event Management & Community Platform with Firebase Chat & Push Notifications',
     },
     servers: [
       {
@@ -831,12 +831,206 @@ const options = {
           properties: {
             roomId: { type: 'string', description: 'Room ID where message belongs' }
           }
+        },
+        // Notification System Schemas
+        FCMToken: {
+          type: 'object',
+          required: ['token', 'platform'],
+          properties: {
+            token: {
+              type: 'string',
+              description: 'FCM token from Firebase Cloud Messaging'
+            },
+            platform: {
+              type: 'string',
+              enum: ['web', 'android', 'ios'],
+              description: 'Device platform'
+            },
+            deviceId: {
+              type: 'string',
+              maxLength: 100,
+              description: 'Optional device identifier'
+            }
+          }
+        },
+        FCMTokenResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            message: { type: 'string' },
+            data: {
+              type: 'object',
+              properties: {
+                platform: { type: 'string' },
+                deviceId: { type: 'string' },
+                registeredAt: {
+                  type: 'string',
+                  format: 'date-time'
+                }
+              }
+            }
+          }
+        },
+        NotificationSettings: {
+          type: 'object',
+          properties: {
+            communityUpdates: {
+              type: 'boolean',
+              default: true,
+              description: 'Receive notifications for community updates'
+            },
+            eventUpdates: {
+              type: 'boolean',
+              default: true,
+              description: 'Receive notifications for event updates'
+            },
+            nearbyCommunities: {
+              type: 'boolean',
+              default: true,
+              description: 'Receive notifications for new communities nearby'
+            },
+            nearbyEvents: {
+              type: 'boolean',
+              default: true,
+              description: 'Receive notifications for new events nearby'
+            },
+            radius: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              default: 25,
+              description: 'Notification radius in kilometers'
+            }
+          }
+        },
+        NotificationSettingsResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                notificationSettings: { $ref: '#/components/schemas/NotificationSettings' },
+                activeTokens: { type: 'integer', description: 'Number of active FCM tokens' },
+                totalTokens: { type: 'integer', description: 'Total number of FCM tokens' }
+              }
+            }
+          }
+        },
+        FCMTokenInfo: {
+          type: 'object',
+          properties: {
+            platform: {
+              type: 'string',
+              enum: ['web', 'android', 'ios']
+            },
+            deviceId: { type: 'string' },
+            isActive: { type: 'boolean' },
+            registeredAt: {
+              type: 'string',
+              format: 'date-time'
+            },
+            lastUsed: {
+              type: 'string',
+              format: 'date-time'
+            }
+          }
+        },
+        FCMTokensResponse: {
+          type: 'object',
+          properties: {
+            success: { type: 'boolean' },
+            data: {
+              type: 'object',
+              properties: {
+                tokens: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/FCMTokenInfo' }
+                },
+                activeCount: { type: 'integer', description: 'Number of active tokens' },
+                totalCount: { type: 'integer', description: 'Total number of tokens' }
+              }
+            }
+          }
+        },
+        RemoveTokenRequest: {
+          type: 'object',
+          required: ['token'],
+          properties: {
+            token: {
+              type: 'string',
+              description: 'FCM token to remove'
+            }
+          }
+        },
+        UpdateNotificationSettingsRequest: {
+          type: 'object',
+          properties: {
+            communityUpdates: {
+              type: 'boolean',
+              description: 'Receive notifications for community updates'
+            },
+            eventUpdates: {
+              type: 'boolean',
+              description: 'Receive notifications for event updates'
+            },
+            nearbyCommunities: {
+              type: 'boolean',
+              description: 'Receive notifications for new communities nearby'
+            },
+            nearbyEvents: {
+              type: 'boolean',
+              description: 'Receive notifications for new events nearby'
+            },
+            radius: {
+              type: 'integer',
+              minimum: 1,
+              maximum: 100,
+              description: 'Notification radius in kilometers'
+            }
+          }
+        },
+        // Enhanced User schema with notification fields
+        UserWithNotifications: {
+          allOf: [
+            { $ref: '#/components/schemas/User' },
+            {
+              type: 'object',
+              properties: {
+                fcmTokens: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      token: { type: 'string' },
+                      platform: {
+                        type: 'string',
+                        enum: ['web', 'android', 'ios']
+                      },
+                      deviceId: { type: 'string' },
+                      isActive: { type: 'boolean' },
+                      registeredAt: {
+                        type: 'string',
+                        format: 'date-time'
+                      },
+                      lastUsed: {
+                        type: 'string',
+                        format: 'date-time'
+                      }
+                    }
+                  }
+                },
+                notificationSettings: { $ref: '#/components/schemas/NotificationSettings' }
+              }
+            }
+          ]
         }
       }
     },
     tags: [
       { name: 'Auth', description: 'Authentication endpoints' },
       { name: 'Users', description: 'User management endpoints' },
+      { name: 'Notifications', description: 'Firebase push notification management endpoints' },
       { name: 'Posts', description: 'Post management endpoints' },
       { name: 'Comments', description: 'Comment management endpoints' },
       { name: 'Communities', description: 'Community management endpoints' },

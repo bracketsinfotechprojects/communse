@@ -3,6 +3,7 @@ const Community = require('../models/Community');
 const User = require('../models/User');
 const LocationService = require('../services/locationService');
 const firebaseCommunityChatService = require('../services/firebaseCommunityChatService');
+const notificationService = require('../services/notificationService');
 
 /**
  * @swagger
@@ -293,6 +294,16 @@ const createCommunity = [
       } catch (chatError) {
         console.error('Failed to create default community chat:', chatError);
         // Don't fail community creation if chat room creation fails
+      }
+
+      // Send push notifications to nearby users with matching interests
+      try {
+        const creator = await User.findById(req.user.userId);
+        await notificationService.notifyCommunityCreation(community, creator);
+        console.log('Community creation notifications sent successfully');
+      } catch (notificationError) {
+        console.error('Failed to send community creation notifications:', notificationError);
+        // Don't fail community creation if notification fails
       }
 
       res.status(201).json({

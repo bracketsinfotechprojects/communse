@@ -30,7 +30,7 @@ const updateAllPasswords = async () => {
     const users = await User.find({});
     console.log(`📊 Found ${users.length} users to update`);
     
-    const newPassword = 'User123';
+    const newPassword = 'CRM@123';
     let updatedCount = 0;
     
     for (const user of users) {

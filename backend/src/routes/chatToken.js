@@ -12,6 +12,8 @@ const router = express.Router();
  *     summary: Generate Firebase Custom Token for chat access
  *     description: Returns a Firebase custom token for authenticated users who are members of the specified event
  *     tags: [Chat]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: query
  *         name: userId
